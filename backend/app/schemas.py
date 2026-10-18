@@ -207,8 +207,10 @@ class Exchange(BaseModel):
 
 
 class ExplainRequest(BaseModel):
-    simulation: SimulationRequest  # the inputs; the server recalculates everything from these
-    selected_method: Literal["cash", "installments", "credit"]
+    # Context, if any. Without a simulation the assistant answers general questions only.
+    simulation: SimulationRequest | None = None  # the inputs; the server recalculates everything from these
+    selected_method: Literal["cash", "installments", "credit"] | None = None  # defaults to simulation.payment
+    investment: "InvestmentRequest | None" = None  # an investing plan instead (ignored when simulation is given)
     question: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
     cushion: Money | None = Field(default=None, ge=0, le=Decimal("1000000"))
     history: list[Exchange] = Field(default_factory=list, max_length=3)  # earlier turns, oldest first
@@ -234,3 +236,92 @@ class SpeechRequest(BaseModel):
 class TranscriptResponse(BaseModel):
     text: str
     client_tag: str
+
+
+# ---- POST /api/investments -------------------------------------------------------
+
+Percent = Annotated[Decimal, Field(decimal_places=2)]
+
+
+class InvestmentRequest(BaseModel):
+    """A hypothetical regular-contribution plan compared across two funds that differ only in fees."""
+    contribution: Money = Field(gt=0, le=Decimal("100000"))
+    frequency: Literal["weekly", "biweekly", "monthly"]
+    start_date: date  # first contribution; must be after the demo reference date
+    years: int = Field(ge=1, le=10)
+    gross_return_pct: Percent = Field(default=Decimal("6.00"), ge=Decimal("-30"), le=Decimal("30"))  # hypothetical, editable
+    adverse_return_pct: Percent = Field(default=Decimal("-4.00"), ge=Decimal("-30"), le=Decimal("30"))
+    fee_a_pct: Percent = Field(default=Decimal("0.15"), ge=0, le=Decimal("5"))  # yearly fund fee, fund A
+    fee_b_pct: Percent = Field(default=Decimal("1.25"), ge=0, le=Decimal("5"))  # yearly fund fee, fund B
+    calendar_start: date | None = None  # optional: also return the money calendar for this period
+    calendar_end: date | None = None
+
+    @model_validator(mode="after")
+    def check(self):
+        if (self.calendar_start is None) != (self.calendar_end is None):
+            raise ValueError("calendar_start and calendar_end must be given together.")
+        if self.calendar_start and self.calendar_end and self.calendar_start > self.calendar_end:
+            raise ValueError("calendar_start must not be after calendar_end.")
+        return self
+
+
+class FundResult(BaseModel):
+    id: Literal["a", "b"]
+    label: str
+    fee_pct: str
+    ending_value: str
+    fees_deducted: str  # money actually taken as fees
+    fee_effect_on_ending: str  # ending with 0% fee minus this ending (includes lost growth)
+    lost_growth: str  # fee_effect_on_ending minus fees_deducted
+    adverse_ending_value: str
+    adverse_fees_deducted: str
+    adverse_fee_effect_on_ending: str
+
+
+class FeeDifference(BaseModel):
+    ending_value_gap: str  # fund A ending minus fund B ending (same return, different fees)
+    extra_fees_deducted: str  # fees B minus fees A
+    extra_lost_growth: str  # the rest of the gap
+
+
+class SeriesPoint(BaseModel):
+    month: str  # YYYY-MM
+    contributed: str
+    no_fee_value: str
+    fund_a_value: str
+    fund_b_value: str
+    adverse_fund_a_value: str
+    adverse_fund_b_value: str
+
+
+class CashFlowCheck(BaseModel):
+    """Only the period with known bills and pay is assessed; later months are not a budget."""
+    assessed_through: str
+    contributions_in_window: int
+    amount_in_window: str
+    contributions_after_coverage: int
+    lowest_checking_before: LowestBalance
+    lowest_checking_after: LowestBalance
+    shortfall_dates_after: list[str]
+
+
+class InvestmentResult(BaseModel):
+    plan_key: str
+    first_contribution: str
+    horizon_end: str
+    contribution_dates: list[str]
+    contributions_count: int
+    total_contributions: str
+    no_fee_ending_value: str
+    adverse_no_fee_ending_value: str
+    funds: list[FundResult]
+    fee_difference: FeeDifference
+    series: list[SeriesPoint]
+    cash_flow: CashFlowCheck
+    baseline: Calendar | None  # the money calendar for calendar_start..calendar_end, if requested
+    scenario: Calendar | None  # same, with the contributions as transfers out of checking
+    convention: list[str]
+    assumptions: list[str]
+
+
+ExplainRequest.model_rebuild()  # InvestmentRequest is defined after ExplainRequest

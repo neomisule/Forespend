@@ -99,6 +99,27 @@ def test_question_is_last_and_no_identifiers_are_sent(client):
     assert "edit the form" in system
 
 
+def test_no_scenario_answers_general_questions_only(client):
+    r = client.post("/api/explain", json={"question": "What is APR?", "client_tag": "g1"})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["scenario_key"] == "none" and body["client_tag"] == "g1"
+    assert (body["window_start"], body["window_end"], body["scheduled_through"]) == ("", "", "")
+    prompt = FakeProvider.calls[0]["messages"][-1]["content"]
+    assert "NO personal numbers" in prompt and "Never invent a purchase" in prompt
+    assert "GLOSSARY" in prompt and "Yearly interest rate (APR)" in prompt
+    assert "$600.00" not in prompt and "Laptop" not in prompt  # nothing made up
+    assert prompt.rstrip().endswith("QUESTION: What is APR?")
+
+
+def test_selected_method_defaults_to_the_simulation_payment(client):
+    body = explain_body()
+    body["simulation"]["payment"] = "installments"
+    del body["selected_method"]
+    assert client.post("/api/explain", json=body).status_code == 200
+    assert "INSTALLMENTS (currently selected on the calendar)" in FakeProvider.calls[0]["messages"][-1]["content"]
+
+
 def test_history_is_passed_as_turns_and_bounded(client):
     hist = [{"question": "q1", "answer": "a1"}, {"question": "q2", "answer": "a2"}]
     r = client.post("/api/explain", json=explain_body(history=hist))
@@ -152,6 +173,16 @@ def test_provider_failure_is_reported_not_faked(client, monkeypatch):
     monkeypatch.setattr(main, "get_provider", lambda s: Failing())
     r = client.post("/api/explain", json=explain_body())
     assert r.status_code == 429 and "busy" in r.json()["error"]
+
+
+def test_cut_off_answers_end_at_a_full_sentence():
+    from app.ai.anthropic_provider import _complete_sentences
+
+    assert _complete_sentences("Cash costs nothing extra. Credit adds $8.68 by Nov 30, 2026. The plan en") == (
+        "Cash costs nothing extra. Credit adds $8.68 by Nov 30, 2026."
+    )
+    assert _complete_sentences("Cash costs nothing extra.") == "Cash costs nothing extra."
+    assert _complete_sentences("Cash costs nothing ext") == ""  # better an error than half a thought
 
 
 def test_status_reports_configured_features(client):
@@ -220,6 +251,19 @@ def test_transcribe_failures_are_clear(client, monkeypatch):
     monkeypatch.setattr(speech, "_default_voice", None)
     r = client.post("/api/speech", json={"text": "hello"})
     assert r.status_code == 503 and "'voices_read' permission" in r.json()["error"] and "ELEVENLABS_VOICE_ID" in r.json()["error"]
+
+
+@pytest.mark.parametrize("status_code,status,expected", [
+    (400, "voice_not_found", "was not found on this ElevenLabs account"),
+    (402, "paid_plan_required", "account's current plan (paid_plan_required)"),
+    (401, "quota_exceeded", "account's current plan (quota_exceeded)"),
+])
+def test_elevenlabs_plan_and_voice_problems_are_explained(client, monkeypatch, status_code, status, expected):
+    monkeypatch.setattr(main, "get_ai_settings", lambda: ai_settings(elevenlabs_api_key="y", elevenlabs_voice_id="abc"))
+    body = {"detail": {"status": status, "message": "ElevenLabs says no."}}
+    monkeypatch.setattr(speech.httpx, "request", lambda *a, **k: FakeResponse(status_code=status_code, json_body=body))
+    r = client.post("/api/speech", json={"text": "hello"})
+    assert r.status_code == 503 and expected in r.json()["error"]
     big = io.BytesIO(b"0" * (speech.MAX_AUDIO_BYTES + 1))
     r = client.post("/api/transcribe", files={"file": ("q.webm", big, "audio/webm")})
     assert r.status_code == 422 and "too large" in r.json()["error"]

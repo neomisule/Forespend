@@ -1,24 +1,31 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ApiError,
   fetchAiStatus,
   fetchCalendar,
   fetchProfile,
+  postInvestment,
   postSimulation,
   type AiStatus,
   type CalendarResponse,
+  type InvestmentRequest,
+  type InvestmentResult,
   type PaymentMethod,
   type Profile,
   type SimulationRequest,
   type SimulationResult,
 } from "./api";
+import { InvestingApp } from "./components/InvestingApp";
+import { AssistantDrawer } from "./components/AssistantDrawer";
 import { DayDetails } from "./components/DayDetails";
 import { EMPTY_DRAFT, ExperimentPanel, type Draft, type Experiment, type SimState } from "./components/ExperimentPanel";
 import { ListView } from "./components/ListView";
 import { MonthGrid } from "./components/MonthGrid";
 import { MonthTotals } from "./components/MonthTotals";
-import GameLearningApp, { type LessonPreset } from "./learning/GameLearningApp";
-import { buildDays } from "./lib/calendarModel";
+import GameLearningApp, { type InvestingPreset, type LessonPreset } from "./learning/GameLearningApp";
+import { NO_CONTEXT, scenarioTag, type AssistantContext } from "./lib/assistant";
+import { buildDays, type PreviewKind } from "./lib/calendarModel";
 import {
   addMonths,
   datesInMonth,
@@ -37,84 +44,150 @@ import { formatMoney } from "./lib/money";
 type Load<T> = { status: "loading" } | { status: "ready"; data: T } | { status: "error"; error: ApiError };
 
 // Space kept under the calendar grid (month totals + card and page padding), in px.
-const RESERVE_BELOW_GRID = 84;
+const RESERVE_BELOW_GRID = 92;
 
 function toApiError(err: unknown): ApiError {
   return err instanceof ApiError ? err : new ApiError("invalid", "Something unexpected went wrong.");
 }
 
-type MainView = "calendar" | "learn";
+type MainView = "calendar" | "learn" | "investing";
+const SECTIONS: { id: MainView; label: string; ready: boolean }[] = [
+  { id: "calendar", label: "Calendar", ready: true },
+  { id: "learn", label: "Learn", ready: true },
+  { id: "investing", label: "Investing", ready: true },
+];
 
 /**
- * Two sections: the money calendar and the Learn lessons. Both stay mounted
- * (the inactive one is hidden) so switching never loses your experiment,
- * loaded months, or lesson progress.
+ * One app, one header. The sections stay mounted (the inactive ones are hidden)
+ * so switching never loses your experiment, loaded months, or lesson progress.
+ * The assistant drawer is shared by every section.
  */
 export default function App() {
   const [view, setView] = useState<MainView>("calendar");
   const [lessonPreset, setLessonPreset] = useState<LessonPreset | null>(null);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [calendarContext, setCalendarContext] = useState<AssistantContext>(NO_CONTEXT);
+  const [investingContext, setInvestingContext] = useState<AssistantContext>(NO_CONTEXT);
+  const [investingPreset, setInvestingPreset] = useState<InvestingPreset | null>(null);
+  // The demo day, learned by the calendar on its first load; the investing form uses it for date limits.
+  const [referenceDate, setReferenceDate] = useState<string | null>(null);
+  // An investing plan the calendar previews as transfers (set by "Preview on calendar").
+  const [investmentPlan, setInvestmentPlan] = useState<InvestmentRequest | null>(null);
+  const onInvestingResult = useCallback((request: InvestmentRequest | null, result: InvestmentResult | null) => {
+    setInvestingContext(request && result ? { kind: "investment", request, result, tag: `invest-${result.plan_key}` } : NO_CONTEXT);
+  }, []);
+  // The assistant talks about the section you are in; Learn borrows the calendar's context.
+  const assistantContext = view === "investing" ? investingContext : calendarContext;
+
+  // Which optional AI features the server has keys for (never the keys themselves).
+  const [aiStatus, setAiStatus] = useState<AiStatus | null>(null);
+  useEffect(() => {
+    const ac = new AbortController();
+    fetchAiStatus(ac.signal)
+      .then(setAiStatus)
+      .catch(() => !ac.signal.aborted && setAiStatus({ explanations: false, speech: false, transcription: false, provider: null, model: null, missing: [] }));
+    return () => ac.abort();
+  }, []);
+
+  const openAssistant = useCallback(() => setAssistantOpen(true), []);
+  // The calendar renders its balances + "Try a purchase" into this header slot (portal), so the
+  // header stays one bar for every section without the calendar needing a second strip.
+  const [headerSlot, setHeaderSlot] = useState<HTMLDivElement | null>(null);
 
   return (
-    <>
+    <div className="min-h-dvh font-sans text-navy">
+      <header className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 sm:px-6">
+        <p className="flex items-center gap-2.5 font-display text-lg font-bold">
+          <span aria-hidden="true" className="lab-brand-tile">
+            F
+          </span>
+          Forespend
+        </p>
+        <nav aria-label="Main sections" className="flex rounded-full border-2 border-line bg-white p-1 shadow-soft">
+          {SECTIONS.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              aria-current={view === s.id ? "page" : undefined}
+              disabled={!s.ready}
+              title={s.ready ? undefined : "Coming soon"}
+              onClick={() => setView(s.id)}
+              className={`rounded-full px-4 py-1.5 text-sm font-bold motion-safe:transition disabled:opacity-40 ${
+                view === s.id ? "bg-accent-bright text-white" : "text-navy-soft hover:bg-accent-soft hover:text-navy"
+              }`}
+            >
+              {s.label}
+              {!s.ready && <span className="sr-only"> (coming soon)</span>}
+            </button>
+          ))}
+        </nav>
+        <div ref={setHeaderSlot} hidden={view !== "calendar"} className="flex flex-wrap items-center gap-x-3 gap-y-2" />
+        <button type="button" onClick={openAssistant} aria-haspopup="dialog" className="lab-button ml-auto !py-2">
+          <span aria-hidden="true">🎤</span> Ask about my money
+        </button>
+      </header>
+
       <div hidden={view !== "calendar"}>
         <CalendarApp
-          viewMenu={<ViewMenu view={view} onView={setView} />}
+          headerSlot={headerSlot}
           lessonPreset={lessonPreset}
           onPresetUsed={() => setLessonPreset(null)}
+          onAssistantContext={setCalendarContext}
+          onExplain={openAssistant}
+          investmentPlan={investmentPlan}
+          onReferenceDate={setReferenceDate}
         />
       </div>
-      <div hidden={view !== "learn"} className="min-h-dvh bg-sky-page font-sans text-navy">
-        <header className="relative z-30 mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-2.5 sm:px-6">
-          <p className="font-display text-xl font-semibold tracking-tight">
-            Money <span className="text-accent">Calendar</span>
-          </p>
-          <div className="ml-auto">
-            <ViewMenu view={view} onView={setView} />
-          </div>
-        </header>
+      <div hidden={view !== "learn"}>
         <GameLearningApp
           onTryInCalendar={(preset) => {
             setLessonPreset(preset);
             setView("calendar");
             window.scrollTo({ top: 0 });
           }}
+          onTryInvesting={(preset) => {
+            setInvestingPreset(preset);
+            setView("investing");
+            window.scrollTo({ top: 0 });
+          }}
         />
       </div>
-    </>
-  );
-}
+      <div hidden={view !== "investing"}>
+        <InvestingApp
+          referenceDate={referenceDate}
+          preset={investingPreset}
+          onPresetUsed={() => setInvestingPreset(null)}
+          onResult={onInvestingResult}
+          onExplain={openAssistant}
+          onPreviewOnCalendar={(request) => {
+            setInvestmentPlan(request);
+            setView("calendar");
+            window.scrollTo({ top: 0 });
+          }}
+        />
+      </div>
 
-function ViewMenu({ view, onView }: { view: MainView; onView: (view: MainView) => void }) {
-  return (
-    <nav aria-label="Main sections" className="flex rounded-full bg-white p-1 shadow-soft">
-      {([
-        ["calendar", "Calendar"],
-        ["learn", "Learn"],
-      ] as const).map(([value, label]) => (
-        <button
-          key={value}
-          type="button"
-          aria-current={view === value ? "page" : undefined}
-          onClick={() => onView(value)}
-          className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
-            view === value ? "bg-accent text-white" : "text-navy-soft hover:bg-accent-soft hover:text-navy"
-          }`}
-        >
-          {label}
-        </button>
-      ))}
-    </nav>
+      <AssistantDrawer open={assistantOpen} onClose={() => setAssistantOpen(false)} context={assistantContext} aiStatus={aiStatus} />
+    </div>
   );
 }
 
 function CalendarApp({
-  viewMenu,
+  headerSlot,
   lessonPreset,
   onPresetUsed,
+  onAssistantContext,
+  onExplain,
+  investmentPlan,
+  onReferenceDate,
 }: {
-  viewMenu: ReactNode;
+  headerSlot: HTMLDivElement | null; // where the balances + "Try a purchase" go (inside the shared header)
   lessonPreset: LessonPreset | null; // set by a Learn lesson's "Try this in your calendar"
   onPresetUsed: () => void;
+  onAssistantContext: (ctx: AssistantContext) => void; // what the shared assistant may talk about
+  onExplain: () => void; // opens the shared assistant
+  investmentPlan: InvestmentRequest | null; // contributions to preview as transfers out of checking
+  onReferenceDate: (d: string) => void; // reports the demo day once known
 }) {
   // ---- profile: name + fetched account balances (never changed by a preview) ----
   const [profile, setProfile] = useState<Load<Profile>>({ status: "loading" });
@@ -147,6 +220,7 @@ function CalendarApp({
           calendarCache.current.set(monthKey(ym), first);
         }
         setReferenceDate(first.demo_reference_date);
+        onReferenceDate(first.demo_reference_date);
         setMonth(ym);
         return;
       }
@@ -169,7 +243,36 @@ function CalendarApp({
   const [experiment, setExperiment] = useState<Experiment | null>(null);
   // Which compared option the calendar shows. Switching needs no new request.
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("cash");
-  const [scenarioView, setScenarioView] = useState<"with" | "original">("with");
+  // Which scenario the calendar shows. A purchase and an investing plan are never combined:
+  // the user switches between them explicitly in the toolbar.
+  const [scenarioView, setScenarioView] = useState<ScenarioView>("with");
+
+  // ---- the investing plan on the calendar (one request per plan + month) ------------------
+  const investCache = useRef(new Map<string, InvestmentResult>());
+  const [invest, setInvest] = useState<{ key: string; state: Load<InvestmentResult> } | null>(null);
+  const investKey = investmentPlan && month ? JSON.stringify([investmentPlan, monthKey(month)]) : null;
+  useEffect(() => {
+    if (!investmentPlan || !month || !investKey || calendar.status === "error") return;
+    const cached = investCache.current.get(investKey);
+    if (cached) {
+      setInvest({ key: investKey, state: { status: "ready", data: cached } });
+      return;
+    }
+    const ac = new AbortController();
+    setInvest({ key: investKey, state: { status: "loading" } });
+    postInvestment({ ...investmentPlan, calendar_start: firstDay(month), calendar_end: lastDay(month) }, ac.signal)
+      .then((data) => {
+        investCache.current.set(investKey, data);
+        setInvest({ key: investKey, state: { status: "ready", data } });
+      })
+      .catch((err) => !ac.signal.aborted && setInvest({ key: investKey, state: { status: "error", error: toApiError(err) } }));
+    return () => ac.abort();
+  }, [investKey, calendar.status === "error"]); // eslint-disable-line react-hooks/exhaustive-deps
+  const investResult = invest && invest.key === investKey && invest.state.status === "ready" ? invest.state.data : null;
+  // A newly previewed plan is shown right away (explicit choice from the Investing screen).
+  useEffect(() => {
+    if (investmentPlan) setScenarioView("invest");
+  }, [investmentPlan]);
   const simCache = useRef(new Map<string, SimulationResult>());
   const [sim, setSim] = useState<{ key: string; state: SimState } | null>(null);
   const [simAttempt, setSimAttempt] = useState(0);
@@ -196,16 +299,6 @@ function CalendarApp({
         : null,
     [experiment, month],
   );
-
-  // Which optional AI features the server has keys for (never the keys themselves).
-  const [aiStatus, setAiStatus] = useState<AiStatus | null>(null);
-  useEffect(() => {
-    const ac = new AbortController();
-    fetchAiStatus(ac.signal)
-      .then(setAiStatus)
-      .catch(() => !ac.signal.aborted && setAiStatus({ explanations: false, speech: false, transcription: false, provider: null, model: null, missing: [] }));
-    return () => ac.abort();
-  }, []);
 
   useEffect(() => {
     if (!experiment || !month || !simKey || calendar.status === "error") return;
@@ -235,6 +328,10 @@ function CalendarApp({
     setSelectedMethod(e.method);
     setExperiment(e);
   }, []);
+  const selectMethod = useCallback((m: PaymentMethod) => {
+    setSelectedMethod(m);
+    setScenarioView("with"); // the panel promises to show the picked option on the calendar
+  }, []);
   const editExperiment = useCallback(() => setExperiment(null), []); // draft still holds the values
   const clearExperiment = useCallback(() => {
     setExperiment(null);
@@ -244,24 +341,55 @@ function CalendarApp({
   // ---- what the calendar shows -----------------------------------------------------------
   const selectedOption = simResult?.options.find((o) => o.method === selectedMethod) ?? simResult?.options[0];
   const showingExperiment = !!selectedOption && scenarioView === "with";
-  const shown: CalendarResponse | null = simResult
-    ? showingExperiment
-      ? selectedOption!.scenario
-      : simResult.baseline
-    : originalForMonth;
+  const showingInvest = scenarioView === "invest" && !!investResult?.scenario;
+  const shown: CalendarResponse | null = showingInvest
+    ? investResult!.scenario
+    : simResult
+      ? showingExperiment
+        ? selectedOption!.scenario
+        : simResult.baseline
+      : originalForMonth;
+  const shownOriginal = showingInvest ? investResult!.baseline! : showingExperiment ? simResult!.baseline : undefined;
+  const shownLabel = showingInvest ? "with investing" : showingExperiment ? `with ${selectedOption!.title.toLowerCase()}` : "original";
   // Changes whenever different numbers are shown, so the calendar can play a short "updated" fade.
-  const shownKey = `${simKey ?? "original"}|${showingExperiment ? selectedOption!.method : "original"}`;
+  const shownKey = `${simKey ?? "original"}|${investKey ?? "-"}|${shownLabel}`;
+  const scenarioOptions: { value: ScenarioView; text: string }[] = [
+    { value: "original", text: "Original" },
+    ...(selectedOption ? [{ value: "with" as const, text: `With ${selectedOption.title.toLowerCase()}` }] : []),
+    ...(investResult?.scenario ? [{ value: "invest" as const, text: "With investing" }] : []),
+  ];
 
   const today = todayISO();
-  const days = useMemo(
-    () => (shown ? buildDays(shown, today, showingExperiment ? simResult!.baseline : undefined) : new Map()),
-    [shown, today, showingExperiment, simResult],
-  );
+  const days = useMemo(() => (shown ? buildDays(shown, today, shownOriginal) : new Map()), [shown, today, shownOriginal]);
   const monthBeyondSchedule = !!shown && shown.end_date > shown.scheduled_through;
 
   const [view, setView] = useState<"calendar" | "list">("calendar");
   const [selected, setSelected] = useState<string | null>(null);
   const [focusRequest, setFocusRequest] = useState(0);
+  // Optional "keep at least $X in checking"; lives here so the assistant can see it too.
+  const [cushion, setCushion] = useState<string | null>(null);
+
+  // Tell the shared assistant what it may talk about (the exact inputs; the server recalculates).
+  // It follows what the calendar shows: the investing preview when that is on screen, otherwise
+  // the purchase comparison, so a purchase answer is never presented as an investing one.
+  useEffect(() => {
+    if (showingInvest && investmentPlan && investResult) {
+      onAssistantContext({ kind: "investment", request: investmentPlan, result: investResult, tag: `invest-${investResult.plan_key}` });
+    } else if (experiment && simRequest && simKey && simResult && selectedOption) {
+      onAssistantContext({
+        kind: "purchase",
+        label: experiment.label,
+        amount: experiment.amount,
+        simRequest,
+        selectedMethod: selectedOption.method,
+        cushion,
+        data: simResult,
+        tag: scenarioTag(simKey, selectedOption.method, cushion),
+      });
+    } else {
+      onAssistantContext(NO_CONTEXT);
+    }
+  }, [experiment, simRequest, simKey, simResult, selectedOption, cushion, showingInvest, investmentPlan, investResult, onAssistantContext]);
 
   const retryAll = useCallback(() => {
     setProfileAttempt((n) => n + 1);
@@ -290,26 +418,20 @@ function CalendarApp({
   const monthTitle = month ? formatMonthTitle(month) : null;
 
   return (
-    <div className="min-h-dvh bg-sky-page font-sans text-navy">
-      {/* One compact top bar: name, balances, main action. */}
-      <header className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-6">
-        <h1 className="font-display text-xl font-semibold tracking-tight">
-          Money <span className="text-accent">Calendar</span>
-        </h1>
-        <AccountStrip profile={profile} onRetry={retryAll} />
-        <div className="ml-auto flex items-center gap-2">
-          {viewMenu}
-          <button
-            type="button"
-            onClick={() => setFocusRequest((n) => n + 1)}
-            className="rounded-full bg-accent px-5 py-2 font-semibold text-white shadow-soft hover:bg-accent-strong"
-          >
-            Try a purchase
-          </button>
-        </div>
-      </header>
+    <div>
+      <h1 className="sr-only">Money calendar</h1>
+      {headerSlot &&
+        createPortal(
+          <>
+            <AccountStrip profile={profile} onRetry={retryAll} />
+            <button type="button" onClick={() => setFocusRequest((n) => n + 1)} className="lab-button-quiet !py-1.5">
+              Try a purchase
+            </button>
+          </>,
+          headerSlot,
+        )}
 
-      <main className="mx-auto max-w-7xl px-4 pb-4 sm:px-6">
+      <main className="mx-auto max-w-7xl px-4 pt-1 pb-2 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">
           {/* First in the page order, so on phones the experiment sits above the calendar.
               On wide screens it scrolls on its own so the calendar can stay fully in view. */}
@@ -323,10 +445,10 @@ function CalendarApp({
               experiment={experiment}
               sim={simState}
               selectedMethod={selectedMethod}
-              onSelectMethod={setSelectedMethod}
-              simRequest={simRequest}
-              simKey={simKey}
-              aiStatus={aiStatus}
+              onSelectMethod={selectMethod}
+              cushion={cushion}
+              onCushion={setCushion}
+              onExplain={onExplain}
               calendarUnavailable={calendar.status === "error"}
               focusRequest={focusRequest}
               onPreview={startExperiment}
@@ -339,7 +461,7 @@ function CalendarApp({
 
           <section
             aria-labelledby="month-title"
-            className="min-w-0 rounded-3xl bg-white p-3 shadow-soft sm:p-4 lg:col-start-1 lg:row-start-1"
+            className="lab-card min-w-0 p-3 sm:p-4 lg:col-start-1 lg:row-start-1"
           >
             <Toolbar
               month={month}
@@ -347,9 +469,8 @@ function CalendarApp({
               view={view}
               onView={setView}
               onMonth={setMonth}
-              scenarioAvailable={!!selectedOption}
-              scenarioLabel={selectedOption ? `With ${selectedOption.title.toLowerCase()}` : "With purchase"}
-              scenarioView={scenarioView}
+              scenarioOptions={scenarioOptions}
+              scenarioView={scenarioOptions.some((o) => o.value === scenarioView) ? scenarioView : "original"}
               onScenarioView={setScenarioView}
             />
             {experiment && !simResult && calendar.status !== "error" && (
@@ -361,7 +482,7 @@ function CalendarApp({
             )}
             <Legend
               referenceDate={referenceDate}
-              showingExperiment={showingExperiment}
+              preview={showingInvest ? "invest" : showingExperiment ? "purchase" : null}
               scheduledThrough={monthBeyondSchedule && shown ? shown.scheduled_through : null}
             />
 
@@ -395,7 +516,7 @@ function CalendarApp({
                   )}
                   <MonthTotals
                     calendar={shown}
-                    label={`${monthTitle}${simResult ? (showingExperiment ? `, with ${selectedOption!.title.toLowerCase()}` : ", original") : ""}`}
+                    label={`${monthTitle}${simResult || investResult ? `, ${shownLabel}` : ""}`}
                   />
                 </>
               )}
@@ -408,7 +529,7 @@ function CalendarApp({
         <DayDetails
           day={selectedDay}
           referenceDate={referenceDate}
-          showingExperiment={showingExperiment}
+          preview={showingInvest ? "invest" : showingExperiment ? "purchase" : null}
           onClose={() => setSelected(null)}
         />
       )}
@@ -426,17 +547,28 @@ function CalendarApp({
 function ScrollPanel({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [more, setMore] = useState(false);
+  const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const update = () => setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 8);
+    // Wide screens: the panel scrolls on its own, sized to the space below the header.
+    // Measured, so a taller header can't push the whole page into scrolling.
+    const size = () => {
+      if (window.innerWidth < 1024) return setMaxHeight(undefined);
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      setMaxHeight(Math.max(240, window.innerHeight - top - 16));
+    };
+    size();
     update();
     el.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", size);
     const ro = new ResizeObserver(update);
     ro.observe(el);
     if (el.firstElementChild) ro.observe(el.firstElementChild);
     return () => {
       el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", size);
       ro.disconnect();
     };
   }, []);
@@ -444,9 +576,10 @@ function ScrollPanel({ children }: { children: React.ReactNode }) {
     <div className="relative lg:sticky lg:top-3 lg:col-start-2 lg:row-start-1">
       <div
         ref={ref}
+        style={{ maxHeight }}
         // `relative` keeps absolutely positioned bits (like screen-reader-only text) inside the
         // scroll box; otherwise they escape it and make the whole page taller.
-        className="relative rounded-3xl bg-white p-5 shadow-soft lg:max-h-[calc(100dvh-5rem)] lg:overflow-y-auto lg:overscroll-contain"
+        className="lab-card relative p-5 lg:overflow-y-auto lg:overscroll-contain"
       >
         {children}
       </div>
@@ -504,11 +637,12 @@ interface ToolbarProps {
   view: "calendar" | "list";
   onView: (v: "calendar" | "list") => void;
   onMonth: (m: YearMonth) => void;
-  scenarioAvailable: boolean;
-  scenarioLabel: string;
-  scenarioView: "with" | "original";
-  onScenarioView: (v: "with" | "original") => void;
+  scenarioOptions: { value: ScenarioView; text: string }[];
+  scenarioView: ScenarioView;
+  onScenarioView: (v: ScenarioView) => void;
 }
+
+type ScenarioView = "original" | "with" | "invest";
 
 function Segmented<T extends string>({
   label,
@@ -566,16 +700,8 @@ function Toolbar(p: ToolbarProps) {
         )}
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        {p.scenarioAvailable && (
-          <Segmented
-            label="Show calendar"
-            options={[
-              { value: "original", text: "Original" },
-              { value: "with", text: p.scenarioLabel },
-            ]}
-            value={p.scenarioView}
-            onChange={p.onScenarioView}
-          />
+        {p.scenarioOptions.length > 1 && (
+          <Segmented label="Show calendar" options={p.scenarioOptions} value={p.scenarioView} onChange={p.onScenarioView} />
         )}
         <Segmented
           label="Layout"
@@ -593,11 +719,11 @@ function Toolbar(p: ToolbarProps) {
 
 function Legend({
   referenceDate,
-  showingExperiment,
+  preview,
   scheduledThrough,
 }: {
   referenceDate: string | null;
-  showingExperiment: boolean;
+  preview: PreviewKind;
   scheduledThrough: string | null;
 }) {
   return (
@@ -627,10 +753,10 @@ function Legend({
         <strong className="text-emerald-800">+</strong> in · <strong className="text-rose-800">−</strong> out ·{" "}
         <span className="rounded border border-dashed border-navy-soft px-0.5">dashed</span> = estimate
       </li>
-      {showingExperiment && (
+      {preview && (
         <li>
-          <strong className="text-lilac">Try:</strong> your purchase’s payments · <strong className="text-lilac">▼</strong>{" "}
-          lower because of it
+          <strong className="text-lilac">Try:</strong> {preview === "invest" ? "your plan’s contributions" : "your purchase’s payments"} ·{" "}
+          <strong className="text-lilac">▼</strong> lower because of it
         </li>
       )}
       <li>⚠ below $0.00</li>

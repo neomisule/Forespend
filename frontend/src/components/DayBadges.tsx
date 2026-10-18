@@ -32,7 +32,7 @@ export function BalanceValue({ day }: { day: DayInfo }) {
         {" "}
         {day.status === "projected" ? "projected " : ""}checking at end of day
         {day.isShortfall ? ", below zero" : ""}
-        {changed ? `, was ${formatMoney(day.originalChecking!)} without the purchase` : ""}
+        {changed ? `, was ${formatMoney(day.originalChecking!)} without the test run` : ""}
       </span>
     </span>
   );

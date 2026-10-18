@@ -5,6 +5,9 @@
 import type { CalendarEvent, CalendarResponse } from "../api";
 import { addDays } from "./dates";
 
+/** What the calendar is previewing on top of the original numbers, if anything. */
+export type PreviewKind = "purchase" | "invest" | null;
+
 export interface DayInfo {
   date: string;
   events: CalendarEvent[];

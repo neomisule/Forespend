@@ -181,7 +181,6 @@
   font-size: 18px;
 }
 
-.hud-stat.streak > span { color: #df8db7; }
 .hud-stat > div { display: flex; flex-direction: column; }
 .hud-stat strong { color: var(--g-ink); font-size: 14px; line-height: 1; }
 .hud-stat small { margin-top: 3px; color: var(--g-muted); font-size: 8px; font-weight: 800; letter-spacing: .08em; }
@@ -1299,7 +1298,6 @@
   .game-header { padding: 17px; }
   .game-brand { font-size: 15px; }
   .game-brand > span { width: 32px; height: 32px; }
-  .hud-stat.streak { display: none; }
   .hud-stat { min-width: 0; padding: 7px 9px; box-shadow: 0 3px 0 #e4e8f3; }
   .hud-stat small { display: none; }
   .player-avatar { width: 37px; height: 37px; }
@@ -1365,3 +1363,7 @@
   margin-left: 6px;
   vertical-align: baseline;
 }
+
+/* The app's shared header already shows the brand, so the in-section copy stays hidden. */
+.game-app .game-brand { display: none; }
+.game-app .game-header { padding-top: 6px; padding-bottom: 6px; }

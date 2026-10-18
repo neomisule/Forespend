@@ -11,12 +11,22 @@ export interface LessonPreset {
   monthlyPayment: string // "100.00"
 }
 
-// Toolkit terms that the calendar also explains, by the calendar's concept id.
+/** What an investing lesson hands to the Investing simulator ("Try this plan in the Investing simulator"). */
+export interface InvestingPreset {
+  contribution: string // "25.00"
+  frequency: 'weekly' | 'biweekly' | 'monthly'
+  years: number
+}
+
+// Toolkit terms that the calendar / simulator also explain, by the shared concept id.
 const CONCEPT_FOR_TERM: Record<string, ConceptId> = {
   APR: 'apr',
   'Minimum payment': 'repayment',
   Interest: 'interest_vs_fee',
   Principal: 'remaining_debt',
+  Fee: 'expense_ratio',
+  'Expense ratio': 'expense_ratio',
+  Compounding: 'compounding',
 }
 
 type Lesson = 'credit' | 'investing'
@@ -60,7 +70,10 @@ function investmentValue(contribution: number, years: number, rate: number, fee:
 
 const stepNames = ['Meet the challenge', 'Make a prediction', 'Try the simulator', 'Quick check']
 
-function GameLearningApp({ onTryInCalendar }: { onTryInCalendar?: (preset: LessonPreset) => void } = {}) {
+function GameLearningApp({
+  onTryInCalendar,
+  onTryInvesting,
+}: { onTryInCalendar?: (preset: LessonPreset) => void; onTryInvesting?: (preset: InvestingPreset) => void } = {}) {
   const [lesson, setLesson] = useState<Lesson>('credit')
   const [creditStep, setCreditStep] = useState(0)
   const [investStep, setInvestStep] = useState(0)
@@ -111,9 +124,6 @@ function GameLearningApp({ onTryInCalendar }: { onTryInCalendar?: (preset: Lesso
           Money Lab
         </a>
         <div className="player-hud" id="player">
-          <div className="hud-stat streak" aria-label="Three day learning streak">
-            <span aria-hidden="true">♥</span><div><strong>3</strong><small>DAY STREAK</small></div>
-          </div>
           <div className="hud-stat" aria-label={`${xp} experience points earned`}>
             <span aria-hidden="true">★</span><div><strong>{xp}</strong><small>TOTAL XP</small></div>
           </div>
@@ -194,6 +204,7 @@ function GameLearningApp({ onTryInCalendar }: { onTryInCalendar?: (preset: Lesso
             completed={completed.includes(currentMission)}
             finish={finishLesson}
             nextQuest={nextLevel}
+            onTryInvesting={onTryInvesting}
           />
         )}
       </main>
@@ -449,7 +460,9 @@ function InvestingQuest({
   completed,
   finish,
   nextQuest,
+  onTryInvesting,
 }: {
+  onTryInvesting?: (preset: InvestingPreset) => void
   courseLevel: number
   step: number
   setStep: (step: number) => void
@@ -589,6 +602,22 @@ function InvestingQuest({
             <small className="disclaimer">These rates are teaching assumptions, not predictions. Actual investments can lose value.</small>
           </div>
         </div>
+        {onTryInvesting && (
+          <div className="calendar-link">
+            <button
+              type="button"
+              className="calendar-link-button"
+              onClick={() => onTryInvesting({ contribution: contribution.toFixed(2), frequency: 'biweekly', years })}
+            >
+              Try this plan in the Investing simulator
+            </button>
+            <small>
+              Opens the simulator with {formatMoney(contribution)} every 2 weeks (each paycheck) for {years} years, comparing the
+              0.15% and 1.25% fee funds on real contribution dates, with the 6% example return and the −4% adverse scenario
+              you can change. Returns there are assumptions too, not predictions.
+            </small>
+          </div>
+        )}
         <NextButton onClick={() => setStep(3)}>+25 XP · take the quick check</NextButton>
       </QuestCard>
     )
@@ -1108,7 +1137,7 @@ function Term({ title, text }: { title: string; text: string }) {
       <span aria-hidden="true">★</span>
       <div>
         <strong>{title}</strong>
-        {concept && <TermHelp concept={concept} label="How the calendar uses this" />}
+        {concept && <TermHelp concept={concept} label="How the app uses this" />}
         <p>{text}</p>
       </div>
     </div>

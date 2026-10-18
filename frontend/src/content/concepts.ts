@@ -14,7 +14,12 @@ export type ConceptId =
   | "installments"
   | "fees"
   | "remaining_debt"
-  | "cushion";
+  | "cushion"
+  | "expense_ratio"
+  | "compounding"
+  | "return_assumption"
+  | "adverse_scenario"
+  | "transfer";
 
 export interface Concept {
   id: ConceptId;
@@ -81,5 +86,42 @@ export const CONCEPTS: Record<ConceptId, Concept> = {
     meaning: "The least you want to keep in checking for surprises, like a repair or a late paycheck.",
     model:
       "We compare it with each option’s lowest projected balance. Passing doesn’t make a purchase safe or affordable; it only means checking stays above your number in this window.",
+  },
+  expense_ratio: {
+    id: "expense_ratio",
+    term: "Yearly fund fee (expense ratio)",
+    meaning:
+      "A percentage a fund removes every year to cover its costs, whether the fund went up or down. 1% of $1,000 is $10 a year.",
+    model:
+      "Here the fee is taken every month at the yearly rate ÷ 12, on the value after that month’s growth. The two funds are identical except for this fee, so the gap between them is the effect of fees alone.",
+  },
+  compounding: {
+    id: "compounding",
+    term: "Lost growth (compounding)",
+    meaning:
+      "Growth can build on earlier growth. Money taken out as fees stops growing, so fees cost more than the amount deducted.",
+    model:
+      "“Fees deducted” is the money actually taken. The “effect of fees on the ending value” is bigger: it also counts the growth that deducted money would have earned (lost growth).",
+  },
+  return_assumption: {
+    id: "return_assumption",
+    term: "Return assumption",
+    meaning:
+      "A yearly percentage you pick to illustrate how money might grow. Nobody knows future returns; real ones vary year to year and can be negative.",
+    model:
+      "The illustration applies your yearly rate ÷ 12 each month. It is not a forecast or a promise. Change it to see how sensitive the result is.",
+  },
+  adverse_scenario: {
+    id: "adverse_scenario",
+    term: "Adverse scenario",
+    meaning: "A deliberately bad assumption, such as a negative yearly return, to show that an investment can end below what you put in.",
+    model: "The app reruns the same months with the adverse yearly rate you chose. It is one possible bad path, not the worst case.",
+  },
+  transfer: {
+    id: "transfer",
+    term: "Transfer, not spending",
+    meaning: "Moving money from checking into an investment account. It leaves your spendable cash but is still your money, just not available to spend without selling.",
+    model:
+      "On the calendar each contribution leaves checking on its date. The invested value is shown separately and is never counted as spendable cash.",
   },
 };

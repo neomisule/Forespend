@@ -1,19 +1,27 @@
 @import "tailwindcss";
 
-/* Our palette and fonts. Tailwind turns each --color-* into classes like bg-navy, text-navy. */
+/*
+ * One look for the whole app. The values come from Money Lab (learning/game.css):
+ * ink text, periwinkle actions, mint panels, a pink accent, cream background, hard
+ * offset shadows and 2px pale borders. Tailwind turns each --color-* into classes
+ * like bg-accent / text-navy, so retheming happens here, not in components.
+ */
 @theme {
-  --color-navy: #141a3a; /* deep ink text */
-  --color-navy-soft: #4a5074; /* secondary text, ~7:1 on white */
-  --color-sky-page: #eceffe; /* icy periwinkle page */
-  --color-surface-soft: #f5f6ff; /* calendar cells, quiet panels */
-  --color-accent: #2c47d6; /* cobalt: actions, selection, focus */
-  --color-accent-strong: #1f35a8;
-  --color-accent-soft: #e0e6ff;
-  --color-lilac: #6b4fd1; /* the one extra accent: your experiment */
-  --color-lilac-soft: #efeaff;
+  --color-navy: #30344f; /* ink */
+  --color-navy-soft: #6b6e89; /* muted text, ≥4.5:1 on white */
+  --color-sky-page: #fffafd; /* cream page */
+  --color-surface-soft: #f4f6ff; /* mint panels */
+  --color-accent: #536caf; /* periwinkle (dark): buttons, links, focus */
+  --color-accent-strong: #4f68af;
+  --color-accent-bright: #718bd5; /* periwinkle (light): fills, selection */
+  --color-accent-soft: #e9f0ff;
+  --color-lilac: #a65f84; /* pink accent text: your experiment */
+  --color-lilac-soft: #fff3f9;
+  --color-line: #d9e0f2; /* card borders */
   --font-sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
   --font-display: "Fredoka Variable", "Plus Jakarta Sans Variable", ui-rounded, system-ui, sans-serif;
-  --shadow-soft: 0 1px 2px rgb(20 26 58 / 0.05), 0 10px 30px -12px rgb(20 26 58 / 0.18);
+  --shadow-soft: 0 4px 0 #e9e7ef; /* chips, small buttons */
+  --shadow-card: 0 8px 0 #e1e6f3, 0 28px 60px rgb(60 55 115 / 0.1); /* big surfaces */
   --animate-refresh: refresh 450ms ease-out;
 }
 
@@ -29,13 +37,81 @@
 }
 
 html {
-  background: var(--color-sky-page);
   color: var(--color-navy);
+  background:
+    radial-gradient(circle at 7% 15%, rgb(152 177 235 / 0.18), transparent 22rem),
+    radial-gradient(circle at 94% 4%, rgb(238 170 205 / 0.2), transparent 22rem),
+    var(--color-sky-page);
+}
+
+/* Shared building blocks (same shapes as Money Lab's cards, buttons and labels). */
+@layer components {
+  .lab-card {
+    border: 2px solid var(--color-line);
+    border-radius: 24px;
+    background: rgb(255 255 255 / 0.95);
+    box-shadow: var(--shadow-card);
+  }
+  .lab-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 12px;
+    background: var(--color-accent);
+    color: #fff;
+    font-weight: 800;
+    padding: 0.7rem 1.1rem;
+    box-shadow: 0 9px 20px rgb(113 139 213 / 0.22);
+  }
+  .lab-button:hover:not(:disabled) {
+    background: var(--color-accent-strong);
+  }
+  .lab-button:disabled {
+    color: #9292a5;
+    background: #e9e7ef;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  .lab-button-quiet {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 2px solid var(--color-line);
+    border-radius: 12px;
+    background: rgb(255 255 255 / 0.9);
+    color: var(--color-accent);
+    font-weight: 800;
+    padding: 0.55rem 0.95rem;
+    box-shadow: var(--shadow-soft);
+  }
+  .lab-button-quiet:hover:not(:disabled) {
+    border-color: #b9c6e9;
+    background: var(--color-accent-soft);
+  }
+  .lab-overline {
+    color: var(--color-accent-bright);
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .lab-brand-tile {
+    display: grid;
+    place-items: center;
+    width: 2.125rem;
+    height: 2.125rem;
+    border-radius: 10px 10px 10px 3px;
+    background: var(--color-accent-bright);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 800;
+  }
 }
 
 /* One consistent, clearly visible keyboard focus style everywhere. */
-:where(a, button, summary, input, select, [tabindex]):focus-visible {
-  outline: 3px solid var(--color-accent);
+:where(a, button, summary, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid #a8b9e8;
   outline-offset: 2px;
   border-radius: 0.75rem;
 }

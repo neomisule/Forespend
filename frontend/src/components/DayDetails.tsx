@@ -1,4 +1,4 @@
-import { certaintyLabel, sourceLabel, type DayInfo } from "../lib/calendarModel";
+import { certaintyLabel, sourceLabel, type DayInfo, type PreviewKind } from "../lib/calendarModel";
 import { formatFullDate, formatShortDate } from "../lib/dates";
 import { differenceCents, formatMoney, formatSignedCents } from "../lib/money";
 import { Dialog } from "./Dialog";
@@ -6,12 +6,12 @@ import { Dialog } from "./Dialog";
 interface Props {
   day: DayInfo;
   referenceDate: string;
-  showingExperiment: boolean;
+  preview: PreviewKind; // what the calendar is previewing, if anything
   onClose: () => void;
 }
 
 /** Everything about one date. All balances come from the backend's schedule. */
-export function DayDetails({ day, referenceDate, showingExperiment, onClose }: Props) {
+export function DayDetails({ day, referenceDate, preview, onClose }: Props) {
   const change =
     day.beginningChecking !== null && day.closingChecking !== null
       ? differenceCents(day.closingChecking, day.beginningChecking)
@@ -26,7 +26,7 @@ export function DayDetails({ day, referenceDate, showingExperiment, onClose }: P
           <strong className="text-navy">{day.status === "past" ? "Past day" : "Projected day"}</strong>{" "}
           {day.status === "past" ? `(on or before the demo day, ${ref})` : `(after the demo day, ${ref})`}
           {day.isToday && " · Today"}
-          {showingExperiment && " · Showing: with your purchase"}
+          {preview && (preview === "invest" ? " · Showing: with your investing plan" : " · Showing: with your purchase")}
         </p>
       }
       onClose={onClose}
@@ -89,7 +89,7 @@ export function DayDetails({ day, referenceDate, showingExperiment, onClose }: P
           </dd>
           {day.originalChecking !== null && (
             <>
-              <dt className="text-navy-soft">Without your purchase</dt>
+              <dt className="text-navy-soft">{preview === "invest" ? "Without your investing plan" : "Without your purchase"}</dt>
               <dd className="text-right tabular-nums text-navy-soft">{formatMoney(day.originalChecking)}</dd>
             </>
           )}

@@ -33,18 +33,36 @@ def _require_key(settings: AiSettings) -> dict:
 
 def _missing_permission(resp: httpx.Response) -> str | None:
     """ElevenLabs keys can be restricted per feature; its 401 body names the missing permission."""
-    try:
-        body = resp.json()
-    except ValueError:
-        return None
-    detail = body.get("detail") if isinstance(body, dict) else None
-    if not isinstance(detail, dict) or detail.get("status") != "missing_permissions":
+    detail = _detail(resp)
+    if detail.get("status") != "missing_permissions":
         return None
     msg = detail.get("message", "")
     return msg.split("permission", 1)[1].split("to execute")[0].strip() if "permission" in msg else "(unknown)"
 
 
+def _detail(resp: httpx.Response) -> dict:
+    """ElevenLabs error bodies look like {"detail": {"status": "...", "message": "..."}}."""
+    try:
+        body = resp.json()
+    except ValueError:
+        return {}
+    detail = body.get("detail") if isinstance(body, dict) else None
+    return detail if isinstance(detail, dict) else {}
+
+
 def _raise_for(resp: httpx.Response, what: str) -> None:
+    status = _detail(resp).get("status")
+    if status == "voice_not_found":
+        raise AiUnavailableError(
+            "The voice in ELEVENLABS_VOICE_ID was not found on this ElevenLabs account. Use a voice id from your "
+            "Voices list, or leave ELEVENLABS_VOICE_ID blank to use the first one."
+        )
+    if resp.status_code == 402 or status in ("payment_required", "paid_plan_required", "quota_exceeded"):
+        raise AiUnavailableError(
+            "ElevenLabs refused this request on the account's current plan "
+            f"({status or 'payment required'}). Free plans can use the premade voices in your Voices list, so set "
+            "ELEVENLABS_VOICE_ID to one of those (or leave it blank), and check the plan's character quota."
+        )
     if resp.status_code == 401:
         perm = _missing_permission(resp)
         if perm:

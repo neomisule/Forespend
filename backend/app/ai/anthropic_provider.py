@@ -41,6 +41,16 @@ class AnthropicProvider:
         if resp.stop_reason == "refusal":
             raise ProviderError("The assistant declined to answer this question. Try rephrasing it.", 422)
         text = "".join(block.text for block in resp.content if block.type == "text").strip()
+        if resp.stop_reason == "max_tokens":
+            text = _complete_sentences(text)  # never show half a sentence
         if not text:
             raise ProviderError("The assistant returned an empty answer. Try again.")
         return text
+
+
+def _complete_sentences(text: str) -> str:
+    """Drops a trailing unfinished sentence from an answer that hit the token limit."""
+    cut = max(text.rfind(end) for end in (". ", ".\n", "! ", "? "))
+    if cut == -1:
+        return text if text.endswith((".", "!", "?")) else ""
+    return text[: cut + 1]

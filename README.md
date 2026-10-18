@@ -1,4 +1,4 @@
-# Money Calendar
+# Forespend
 
 A financial calendar for students (Technica 2026 hackathon project). It shows a
 demo customer's upcoming money in a month calendar and lets you test a purchase
@@ -30,6 +30,18 @@ events are made-up demo data. Nothing here moves real money.
   calculation; the model only explains. Without keys the app shows its own
   calculated explanation and says the live assistant is unavailable.
 
+- **One app, one header** (Calendar | Learn | Investing, "Ask about my money"):
+  the assistant lives in a side drawer shared by every section, with the current
+  comparison or investing plan as context, suggested questions, Listen/Stop and
+  push-to-talk. "Explain this" next to any result opens the same drawer.
+- **Investing** (top-bar section): a regular contribution (amount, frequency,
+  first date, 1–10 years) into two hypothetical funds with the same investments
+  and return before fees but different yearly fees. Returns are editable
+  assumptions with an adverse scenario, never a forecast. Shows ending values,
+  fees deducted vs. the full effect of fees (incl. lost growth), a chart with an
+  equivalent table, and a cash-flow check limited to the known schedule.
+  "Preview on calendar" shows the contributions as transfers out of checking,
+  switchable against a purchase experiment (never combined).
 - **Learn** (top-bar section): short credit-card and investing quests with
   predictions, simulators and quick checks. Credit toolkit terms open the same
   explanations the calendar uses, and the credit simulator's "Try this purchase
@@ -90,6 +102,7 @@ cd frontend; npm run typecheck; npm test; npm run build
 | `GET /api/profile` | Customer, Nessie account balances, upcoming demo events |
 | `GET /api/calendar?start_date=&end_date=` | Daily balances and events for a date range |
 | `POST /api/simulations` | Compare a hypothetical purchase paid by cash / installments / credit |
+| `POST /api/investments` | Illustrate regular contributions into two funds that differ only in fees (documented monthly convention) |
 | `GET /api/ai/status` | Which optional AI features have keys configured (never the keys) |
 | `POST /api/explain` | Answer a question about the current comparison (recalculated server-side, then explained by the model) |
 | `POST /api/speech` | Read given text aloud (MP3) |

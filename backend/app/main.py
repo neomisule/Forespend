@@ -14,11 +14,14 @@ from .config import ConfigError, get_ai_settings, get_settings
 from .money_calendar import CalendarRangeError, MissingAccountError, build_calendar
 from .nessie_client import NessieClient, NessieError
 from .profile import build_profile
+from .investing_plan import run_investment
 from .schemas import (
     AiStatus,
     Calendar,
     ExplainRequest,
     ExplainResponse,
+    InvestmentRequest,
+    InvestmentResult,
     Profile,
     SimulationRequest,
     SimulationResult,
@@ -106,6 +109,12 @@ def calendar(
 def simulate(req: SimulationRequest):
     """Preview one hypothetical purchase. Read-only: nothing is saved or paid."""
     return run_simulation(fetch_profile(), req)
+
+
+@app.post("/api/investments", response_model=InvestmentResult)
+def invest(req: InvestmentRequest):
+    """Illustrate regular contributions into two funds that differ only in fees. Read-only."""
+    return run_investment(fetch_profile(), req)
 
 
 # ---- optional AI features -------------------------------------------------------------

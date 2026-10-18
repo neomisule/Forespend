@@ -1,11 +1,9 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
-import type { AiStatus, ApiError, MethodOption, PaymentMethod, SimulationRequest, SimulationResult } from "../api";
+import type { ApiError, MethodOption, PaymentMethod, SimulationResult } from "../api";
 import type { ConceptId } from "../content/concepts";
-import { scenarioTag } from "../lib/assistant";
 import { addDays, formatShortDate } from "../lib/dates";
 import { answers, cushionLabel, cushionStatus, interpret } from "../lib/interpretation";
 import { formatMoney, normalizeAmountInput, toCents } from "../lib/money";
-import { Assistant } from "./Assistant";
 import { TermHelp } from "./TermHelp";
 
 type Frequency = "weekly" | "biweekly" | "monthly";
@@ -130,9 +128,9 @@ interface Props {
   sim: SimState | null;
   selectedMethod: PaymentMethod;
   onSelectMethod: (m: PaymentMethod) => void;
-  simRequest: SimulationRequest | null; // what was sent to the backend for the current month
-  simKey: string | null;
-  aiStatus: AiStatus | null;
+  cushion: string | null; // optional "keep at least $X in checking"
+  onCushion: (c: string | null) => void;
+  onExplain: () => void; // opens the shared assistant with this comparison as context
   calendarUnavailable: boolean;
   focusRequest: number;
   onPreview: (e: Experiment) => void;
@@ -142,10 +140,8 @@ interface Props {
 }
 
 export function ExperimentPanel(props: Props) {
-  const { referenceDate, monthTitle, draft, onDraftChange, experiment, sim } = props;
+  const { referenceDate, monthTitle, draft, onDraftChange, experiment, sim, cushion, onCushion } = props;
   const [errors, setErrors] = useState<Errors>({});
-  // Optional personal priority; kept while you switch months or methods.
-  const [cushion, setCushion] = useState<string | null>(null);
   const refs = useRef<Partial<Record<Field, HTMLInputElement | null>>>({});
   const resultsRef = useRef<HTMLHeadingElement>(null);
   const exampleRef = useRef<HTMLButtonElement>(null);
@@ -199,13 +195,20 @@ export function ExperimentPanel(props: Props) {
   if (experiment) {
     return (
       <section aria-labelledby="exp-results" className="flex flex-col gap-3">
-        <div>
-          <h2 id="exp-results" ref={resultsRef} tabIndex={-1} className="font-display text-xl font-semibold">
-            Compare ways to pay
-          </h2>
-          <p className="text-sm">
-            <strong>{experiment.label}</strong> · {formatMoney(experiment.amount)} · bought {formatShortDate(experiment.purchaseDate)}
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h2 id="exp-results" ref={resultsRef} tabIndex={-1} className="font-display text-xl font-bold">
+              Compare ways to pay
+            </h2>
+            <p className="text-sm">
+              <strong>{experiment.label}</strong> · {formatMoney(experiment.amount)} · bought {formatShortDate(experiment.purchaseDate)}
+            </p>
+          </div>
+          {sim?.status === "ready" && (
+            <button type="button" onClick={props.onExplain} aria-haspopup="dialog" className="lab-button-quiet !py-1.5 text-sm">
+              <span aria-hidden="true">💬</span> Explain this
+            </button>
+          )}
         </div>
 
         <div aria-live="polite">
@@ -231,10 +234,7 @@ export function ExperimentPanel(props: Props) {
               selected={props.selectedMethod}
               onSelect={props.onSelectMethod}
               cushion={cushion}
-              onCushion={setCushion}
-              simRequest={props.simRequest}
-              simKey={props.simKey}
-              aiStatus={props.aiStatus}
+              onCushion={onCushion}
             />
           )}
         </div>
@@ -482,18 +482,12 @@ function Comparison({
   onSelect,
   cushion,
   onCushion,
-  simRequest,
-  simKey,
-  aiStatus,
 }: {
   data: SimulationResult;
   selected: PaymentMethod;
   onSelect: (m: PaymentMethod) => void;
   cushion: string | null;
   onCushion: (c: string | null) => void;
-  simRequest: SimulationRequest | null;
-  simKey: string | null;
-  aiStatus: AiStatus | null;
 }) {
   const chosen = data.options.find((o) => o.method === selected) ?? data.options[0];
   const uid = useId();
@@ -541,17 +535,6 @@ function Comparison({
         <p className="mt-2">{meaning.tradeoff}</p>
         {meaning.limitation && <p className="mt-2 text-xs text-navy-soft">{meaning.limitation}</p>}
       </section>
-
-      {simRequest && simKey && (
-        <Assistant
-          data={data}
-          simRequest={simRequest}
-          selectedMethod={chosen.method}
-          cushion={cushion}
-          scenarioTag={scenarioTag(simKey, chosen.method, cushion)}
-          aiStatus={aiStatus}
-        />
-      )}
 
       {chosen.warnings.some((w) => w.includes("does not cover") || w.includes("not repaid")) && (
         <ul className="flex flex-col gap-1 rounded-2xl bg-amber-50 p-3 text-sm text-amber-950">

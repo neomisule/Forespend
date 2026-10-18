@@ -10,17 +10,31 @@ import json
 from datetime import date
 from decimal import Decimal
 
-from ..schemas import ExplainRequest, ExplainResponse, MethodOption, Profile, SimulationRequest, SimulationResult
+from ..investing_plan import run_investment
+from ..schemas import (
+    ExplainRequest,
+    ExplainResponse,
+    InvestmentRequest,
+    InvestmentResult,
+    MethodOption,
+    Profile,
+    SimulationRequest,
+    SimulationResult,
+)
 from ..simulation import run_simulation
 from .glossary import GLOSSARY
 from .providers import ExplanationProvider
 
-MAX_ANSWER_TOKENS = 600
+MAX_ANSWER_TOKENS = 1500  # shared with the model's (adaptive) thinking; the visible answer is short
 MAX_SCHEDULE_ROWS = 8
 
-SYSTEM_PROMPT = """You are a friendly money coach inside a student budgeting app called Money Calendar.
-The user is testing a hypothetical purchase and comparing three ways to pay: cash, installments, and a credit card.
-Everything you need is in the SCENARIO block of the user's message. It was calculated by the app from the user's inputs.
+SYSTEM_PROMPT = """You are a friendly money coach inside a student budgeting app called Forespend.
+The user is either testing a hypothetical purchase (cash vs. installments vs. a credit card) or illustrating regular
+contributions into two funds that differ only in fees. Everything you need is in the SCENARIO block of the user's
+message. It was calculated by the app from the user's inputs.
+- For investing: the returns are the user's own assumptions, never a forecast. Never suggest a return is likely or
+  guaranteed, never recommend a fund or product, and keep "fees deducted" distinct from the total effect of fees
+  (which includes lost growth). Invested money is not spendable cash.
 
 Rules:
 - Explain; never calculate. Use only numbers, dates and facts from the SCENARIO. Do not invent, estimate, round differently, or extend them.
@@ -113,10 +127,73 @@ def scenario_key(sim: SimulationRequest, selected: str, cushion: Decimal | None)
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
+NO_SCENARIO_CONTEXT = (
+    "SCENARIO\n"
+    "The user has not set up a purchase test run yet, so there are NO personal numbers to talk about. "
+    "Answer general educational questions using the glossary below. If the user asks about their own balances, "
+    "costs, or which option suits them, say that you can only work with real numbers once they start a purchase "
+    "test run in the Calendar section (press \"Try a purchase\"), and offer to explain the terms involved. "
+    "Never invent a purchase, balance, or result.\n\n"
+    "GLOSSARY (how this app defines things)\n"
+)
+
+
+def build_investment_context(r: InvestmentResult, req: InvestmentRequest) -> str:
+    """Deterministic plain-text summary of an investing illustration (no account identifiers)."""
+    freq = {"weekly": "every week", "biweekly": "every 2 weeks", "monthly": "every month"}[req.frequency]
+    a, b = r.funds
+    cf = r.cash_flow
+    lines = [
+        "SCENARIO (investing illustration, not a purchase)",
+        f"Plan: {_usd(str(req.contribution))} {freq} from {_d(r.first_contribution)} for {req.years} year(s) "
+        f"({r.contributions_count} contributions, {_usd(r.total_contributions)} in total).",
+        f"Assumed yearly return before fees: {req.gross_return_pct}% (user-chosen, hypothetical). Adverse scenario: "
+        f"{req.adverse_return_pct}% a year.",
+        "Both funds hold the same investments and earn the same return before fees; only the yearly fee differs.",
+        f"{a.label}: fee {a.fee_pct}%/yr. Ending value {_usd(a.ending_value)}; fees deducted {_usd(a.fees_deducted)}; "
+        f"total effect of fees on the ending value {_usd(a.fee_effect_on_ending)} (of which lost growth {_usd(a.lost_growth)}); "
+        f"adverse-scenario ending value {_usd(a.adverse_ending_value)}.",
+        f"{b.label}: fee {b.fee_pct}%/yr. Ending value {_usd(b.ending_value)}; fees deducted {_usd(b.fees_deducted)}; "
+        f"total effect of fees on the ending value {_usd(b.fee_effect_on_ending)} (of which lost growth {_usd(b.lost_growth)}); "
+        f"adverse-scenario ending value {_usd(b.adverse_ending_value)}.",
+        f"With no fee at all the ending value would be {_usd(r.no_fee_ending_value)} (adverse: {_usd(r.adverse_no_fee_ending_value)}).",
+        f"Gap between the funds caused by fees: {_usd(r.fee_difference.ending_value_gap)} = extra fees deducted "
+        f"{_usd(r.fee_difference.extra_fees_deducted)} + extra lost growth {_usd(r.fee_difference.extra_lost_growth)}.",
+        f"Cash flow is assessed only through {_d(cf.assessed_through)} (the demo has no bills or pay after that): "
+        f"{cf.contributions_in_window} contribution(s) totalling {_usd(cf.amount_in_window)} fall in that period; "
+        f"lowest checking goes from {_usd(cf.lowest_checking_before.balance)} to {_usd(cf.lowest_checking_after.balance)} "
+        f"on {_d(cf.lowest_checking_after.date)}" + (" (BELOW $0)" if cf.shortfall_dates_after else "") + ". "
+        f"{cf.contributions_after_coverage} later contribution(s) are not assessed against any budget.",
+        "Contributions are transfers into a hypothetical investment account, not spending; the invested value is "
+        "never counted as spendable cash.",
+        "",
+        "CALCULATION CONVENTION",
+    ]
+    lines.extend(f"- {c}" for c in r.convention)
+    lines.append("")
+    lines.append("GLOSSARY (how this app defines things)")
+    lines.extend(f"- {text}" for text in GLOSSARY.values())
+    return "\n".join(lines)
+
+
 def run_explanation(profile: Profile, req: ExplainRequest, provider: ExplanationProvider) -> ExplainResponse:
-    sim = req.simulation.model_copy(update={"compare": True})  # every method, so comparisons can be explained
-    result = run_simulation(profile, sim)
-    context = build_context(result, req.selected_method, req.cushion)
+    """Explain the user's purchase comparison or investing plan, or answer a general question when there is none."""
+    if req.simulation is None and req.investment is not None:
+        result = run_investment(profile, req.investment)  # recalculated here
+        context = build_investment_context(result, req.investment)
+        key = "invest-" + result.plan_key
+        window = (result.first_contribution, result.cash_flow.assessed_through, result.cash_flow.assessed_through)
+    elif req.simulation is not None:
+        sim = req.simulation.model_copy(update={"compare": True})  # every method, so comparisons can be explained
+        selected = req.selected_method or sim.payment
+        result = run_simulation(profile, sim)  # recalculated here; never trusts browser totals
+        context = build_context(result, selected, req.cushion)
+        key = scenario_key(sim, selected, req.cushion)
+        window = (result.coverage.window_start, result.coverage.window_end, result.coverage.scheduled_through)
+    else:
+        context = NO_SCENARIO_CONTEXT + "\n".join(f"- {text}" for text in GLOSSARY.values())
+        key = "none"
+        window = ("", "", "")
 
     messages: list[dict] = []
     for turn in req.history:  # short, bounded; earlier answers are context only
@@ -127,11 +204,11 @@ def run_explanation(profile: Profile, req: ExplainRequest, provider: Explanation
     answer = provider.complete(SYSTEM_PROMPT, messages, MAX_ANSWER_TOKENS)
     return ExplainResponse(
         answer=answer,
-        scenario_key=scenario_key(sim, req.selected_method, req.cushion),
+        scenario_key=key,
         client_tag=req.client_tag,
         provider=provider.name,
         model=provider.model,
-        window_start=result.coverage.window_start,
-        window_end=result.coverage.window_end,
-        scheduled_through=result.coverage.scheduled_through,
+        window_start=window[0],
+        window_end=window[1],
+        scheduled_through=window[2],
     )

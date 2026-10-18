@@ -155,9 +155,77 @@ export interface AiStatus {
   missing: string[];
 }
 
+// ---- POST /api/investments (mirrors InvestmentRequest / InvestmentResult) ----
+
+export type ContributionFrequency = "weekly" | "biweekly" | "monthly";
+
+export interface InvestmentRequest {
+  contribution: string; // "25.00"
+  frequency: ContributionFrequency;
+  start_date: string;
+  years: number; // 1–10
+  gross_return_pct: string; // hypothetical, e.g. "6.00"
+  adverse_return_pct: string; // e.g. "-4.00"
+  fee_a_pct: string; // yearly fund fee, e.g. "0.15"
+  fee_b_pct: string; // e.g. "1.25"
+  calendar_start?: string; // also return the money calendar for this period
+  calendar_end?: string;
+}
+
+export interface FundResult {
+  id: "a" | "b";
+  label: string;
+  fee_pct: string;
+  ending_value: string;
+  fees_deducted: string;
+  fee_effect_on_ending: string; // includes lost growth
+  lost_growth: string;
+  adverse_ending_value: string;
+  adverse_fees_deducted: string;
+  adverse_fee_effect_on_ending: string;
+}
+
+export interface SeriesPoint {
+  month: string; // YYYY-MM
+  contributed: string;
+  no_fee_value: string;
+  fund_a_value: string;
+  fund_b_value: string;
+  adverse_fund_a_value: string;
+  adverse_fund_b_value: string;
+}
+
+export interface InvestmentResult {
+  plan_key: string;
+  first_contribution: string;
+  horizon_end: string;
+  contribution_dates: string[];
+  contributions_count: number;
+  total_contributions: string;
+  no_fee_ending_value: string;
+  adverse_no_fee_ending_value: string;
+  funds: [FundResult, FundResult];
+  fee_difference: { ending_value_gap: string; extra_fees_deducted: string; extra_lost_growth: string };
+  series: SeriesPoint[];
+  cash_flow: {
+    assessed_through: string;
+    contributions_in_window: number;
+    amount_in_window: string;
+    contributions_after_coverage: number;
+    lowest_checking_before: { date: string; balance: string };
+    lowest_checking_after: { date: string; balance: string };
+    shortfall_dates_after: string[];
+  };
+  baseline: CalendarResponse | null;
+  scenario: CalendarResponse | null;
+  convention: string[];
+  assumptions: string[];
+}
+
 export interface ExplainRequest {
-  simulation: SimulationRequest; // the server recalculates everything from these inputs
-  selected_method: PaymentMethod;
+  simulation?: SimulationRequest; // the server recalculates everything from these inputs; omit = general questions only
+  selected_method?: PaymentMethod;
+  investment?: InvestmentRequest; // an investing plan instead of a purchase
   question: string;
   cushion: string | null;
   history: { question: string; answer: string }[]; // at most 3, oldest first
@@ -455,6 +523,83 @@ export async function postSimulation(req: SimulationRequest, signal?: AbortSigna
   return parseSimulation(await requestJson("/api/simulations", signal, req));
 }
 
+function num(o: Obj, key: string, what: string): number {
+  return typeof o[key] === "number" ? (o[key] as number) : fail(`${what}.${key} should be a number`);
+}
+
+function parseFund(raw: unknown, i: number): FundResult {
+  const f = obj(raw, `fund ${i}`);
+  const w = "fund";
+  return {
+    id: oneOf(f, "id", ["a", "b"] as const, w),
+    label: str(f, "label", w),
+    fee_pct: str(f, "fee_pct", w),
+    ending_value: money(f, "ending_value", w),
+    fees_deducted: money(f, "fees_deducted", w),
+    fee_effect_on_ending: money(f, "fee_effect_on_ending", w),
+    lost_growth: money(f, "lost_growth", w),
+    adverse_ending_value: money(f, "adverse_ending_value", w),
+    adverse_fees_deducted: money(f, "adverse_fees_deducted", w),
+    adverse_fee_effect_on_ending: money(f, "adverse_fee_effect_on_ending", w),
+  };
+}
+
+export function parseInvestment(raw: unknown): InvestmentResult {
+  const r = obj(raw, "investment");
+  const fd = obj(r.fee_difference, "investment.fee_difference");
+  const cf = obj(r.cash_flow, "investment.cash_flow");
+  const funds = arr(r.funds, "investment.funds").map(parseFund);
+  if (funds.length !== 2) fail("investment.funds should have two funds");
+  return {
+    plan_key: str(r, "plan_key", "investment"),
+    first_contribution: date(r, "first_contribution", "investment"),
+    horizon_end: date(r, "horizon_end", "investment"),
+    contribution_dates: dates(r.contribution_dates, "investment.contribution_dates"),
+    contributions_count: num(r, "contributions_count", "investment"),
+    total_contributions: money(r, "total_contributions", "investment"),
+    no_fee_ending_value: money(r, "no_fee_ending_value", "investment"),
+    adverse_no_fee_ending_value: money(r, "adverse_no_fee_ending_value", "investment"),
+    funds: [funds[0], funds[1]],
+    fee_difference: {
+      ending_value_gap: money(fd, "ending_value_gap", "fee_difference"),
+      extra_fees_deducted: money(fd, "extra_fees_deducted", "fee_difference"),
+      extra_lost_growth: money(fd, "extra_lost_growth", "fee_difference"),
+    },
+    series: arr(r.series, "investment.series").map((p, i) => {
+      const s = obj(p, `series point ${i}`);
+      const w = "series point";
+      if (typeof s.month !== "string" || !/^\d{4}-\d{2}$/.test(s.month)) fail("series point.month should be YYYY-MM");
+      return {
+        month: s.month,
+        contributed: money(s, "contributed", w),
+        no_fee_value: money(s, "no_fee_value", w),
+        fund_a_value: money(s, "fund_a_value", w),
+        fund_b_value: money(s, "fund_b_value", w),
+        adverse_fund_a_value: money(s, "adverse_fund_a_value", w),
+        adverse_fund_b_value: money(s, "adverse_fund_b_value", w),
+      };
+    }),
+    cash_flow: {
+      assessed_through: date(cf, "assessed_through", "cash_flow"),
+      contributions_in_window: num(cf, "contributions_in_window", "cash_flow"),
+      amount_in_window: money(cf, "amount_in_window", "cash_flow"),
+      contributions_after_coverage: num(cf, "contributions_after_coverage", "cash_flow"),
+      lowest_checking_before: lowest(cf.lowest_checking_before, "cash_flow.lowest_checking_before"),
+      lowest_checking_after: lowest(cf.lowest_checking_after, "cash_flow.lowest_checking_after"),
+      shortfall_dates_after: dates(cf.shortfall_dates_after, "cash_flow.shortfall_dates_after"),
+    },
+    baseline: r.baseline === null ? null : parseCalendar(r.baseline),
+    scenario: r.scenario === null ? null : parseCalendar(r.scenario),
+    convention: texts(r.convention, "investment.convention"),
+    assumptions: texts(r.assumptions, "investment.assumptions"),
+  };
+}
+
+/** Illustrate a regular-contribution plan. Read-only; nothing moves. */
+export async function postInvestment(req: InvestmentRequest, signal?: AbortSignal): Promise<InvestmentResult> {
+  return parseInvestment(await requestJson("/api/investments", signal, req));
+}
+
 export async function fetchAiStatus(signal?: AbortSignal): Promise<AiStatus> {
   const s = obj(await requestJson("/api/ai/status", signal), "ai status");
   return {
@@ -475,9 +620,10 @@ export async function postExplain(req: ExplainRequest, signal?: AbortSignal): Pr
     client_tag: str(r, "client_tag", "explanation"),
     provider: str(r, "provider", "explanation"),
     model: str(r, "model", "explanation"),
-    window_start: date(r, "window_start", "explanation"),
-    window_end: date(r, "window_end", "explanation"),
-    scheduled_through: date(r, "scheduled_through", "explanation"),
+    // Blank when the question had no scenario behind it.
+    window_start: r.window_start === "" ? "" : date(r, "window_start", "explanation"),
+    window_end: r.window_end === "" ? "" : date(r, "window_end", "explanation"),
+    scheduled_through: r.scheduled_through === "" ? "" : date(r, "scheduled_through", "explanation"),
   };
 }
 
