@@ -188,3 +188,49 @@ class SimulationResult(BaseModel):
     assumptions: list[str]
     coverage: Coverage
     options: list[MethodOption]  # the selected method, or all compared methods
+
+
+# ---- AI explanations and speech (optional features) ------------------------------
+
+class AiStatus(BaseModel):
+    explanations: bool  # a language-model key is configured
+    speech: bool  # text-to-speech configured
+    transcription: bool  # speech-to-text configured (same ElevenLabs key)
+    provider: str | None
+    model: str | None
+    missing: list[str]  # env variable names that would enable the unavailable features
+
+
+class Exchange(BaseModel):
+    question: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
+    answer: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1500)]
+
+
+class ExplainRequest(BaseModel):
+    simulation: SimulationRequest  # the inputs; the server recalculates everything from these
+    selected_method: Literal["cash", "installments", "credit"]
+    question: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
+    cushion: Money | None = Field(default=None, ge=0, le=Decimal("1000000"))
+    history: list[Exchange] = Field(default_factory=list, max_length=3)  # earlier turns, oldest first
+    client_tag: Annotated[str, StringConstraints(max_length=120)] = ""  # echoed back so the browser can match replies
+
+
+class ExplainResponse(BaseModel):
+    answer: str
+    scenario_key: str  # changes whenever the inputs, selected method or cushion change
+    client_tag: str
+    provider: str
+    model: str
+    window_start: str
+    window_end: str
+    scheduled_through: str
+
+
+class SpeechRequest(BaseModel):
+    text: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
+    client_tag: Annotated[str, StringConstraints(max_length=120)] = ""
+
+
+class TranscriptResponse(BaseModel):
+    text: str
+    client_tag: str

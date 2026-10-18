@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ApiError,
+  fetchAiStatus,
   fetchCalendar,
   fetchProfile,
   postSimulation,
+  type AiStatus,
   type CalendarResponse,
   type PaymentMethod,
   type Profile,
+  type SimulationRequest,
   type SimulationResult,
 } from "./api";
 import { DayDetails } from "./components/DayDetails";
@@ -101,6 +104,35 @@ export default function App() {
   // One key per (experiment, month). Results are only shown when their key matches,
   // so an old or failed result can never be labelled as the current one.
   const simKey = experiment && month ? JSON.stringify([experiment, monthKey(month)]) : null;
+  // The exact request for this experiment + month; also handed to the assistant so the
+  // server can recalculate from the same inputs.
+  const simRequest = useMemo<SimulationRequest | null>(
+    () =>
+      experiment && month
+        ? {
+            label: experiment.label,
+            amount: experiment.amount,
+            purchase_date: experiment.purchaseDate,
+            payment: experiment.method,
+            start_date: firstDay(month),
+            end_date: lastDay(month),
+            installments: experiment.installments,
+            credit: experiment.credit,
+            compare: true, // all three methods, one Nessie snapshot
+          }
+        : null,
+    [experiment, month],
+  );
+
+  // Which optional AI features the server has keys for (never the keys themselves).
+  const [aiStatus, setAiStatus] = useState<AiStatus | null>(null);
+  useEffect(() => {
+    const ac = new AbortController();
+    fetchAiStatus(ac.signal)
+      .then(setAiStatus)
+      .catch(() => !ac.signal.aborted && setAiStatus({ explanations: false, speech: false, transcription: false, provider: null, model: null, missing: [] }));
+    return () => ac.abort();
+  }, []);
 
   useEffect(() => {
     if (!experiment || !month || !simKey || calendar.status === "error") return;
@@ -111,20 +143,7 @@ export default function App() {
     }
     const ac = new AbortController();
     setSim({ key: simKey, state: { status: "loading" } });
-    postSimulation(
-      {
-        label: experiment.label,
-        amount: experiment.amount,
-        purchase_date: experiment.purchaseDate,
-        payment: experiment.method,
-        start_date: firstDay(month),
-        end_date: lastDay(month),
-        installments: experiment.installments,
-        credit: experiment.credit,
-        compare: true, // all three methods, one Nessie snapshot
-      },
-      ac.signal,
-    )
+    postSimulation(simRequest!, ac.signal)
       .then((data) => {
         simCache.current.set(simKey, data);
         setSim({ key: simKey, state: { status: "ready", data } });
@@ -214,6 +233,9 @@ export default function App() {
               sim={simState}
               selectedMethod={selectedMethod}
               onSelectMethod={setSelectedMethod}
+              simRequest={simRequest}
+              simKey={simKey}
+              aiStatus={aiStatus}
               calendarUnavailable={calendar.status === "error"}
               focusRequest={focusRequest}
               onPreview={startExperiment}

@@ -1,17 +1,30 @@
 """FastAPI app. Run from backend/:  uvicorn app.main:app --reload"""
 from datetime import date
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, File, Form, Query, Request, UploadFile
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
-from .config import ConfigError, get_settings
+from .ai import speech
+from .ai.explain import run_explanation
+from .ai.providers import ProviderError, get_provider
+from .config import ConfigError, get_ai_settings, get_settings
 from .money_calendar import CalendarRangeError, MissingAccountError, build_calendar
 from .nessie_client import NessieClient, NessieError
 from .profile import build_profile
-from .schemas import Calendar, Profile, SimulationRequest, SimulationResult
+from .schemas import (
+    AiStatus,
+    Calendar,
+    ExplainRequest,
+    ExplainResponse,
+    Profile,
+    SimulationRequest,
+    SimulationResult,
+    SpeechRequest,
+    TranscriptResponse,
+)
 from .simulation import run_simulation
 
 app = FastAPI(title="Financial Calendar API")
@@ -57,6 +70,11 @@ async def missing_account_error_handler(request: Request, exc: MissingAccountErr
     return JSONResponse(status_code=409, content={"error": str(exc)})
 
 
+@app.exception_handler(ProviderError)
+async def provider_error_handler(request: Request, exc: ProviderError):
+    return JSONResponse(status_code=exc.status_code, content={"error": str(exc)})
+
+
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
@@ -86,5 +104,48 @@ def calendar(
 
 @app.post("/api/simulations", response_model=SimulationResult)
 def simulate(req: SimulationRequest):
-    """Preview one hypothetical cash purchase. Read-only: nothing is saved or paid."""
+    """Preview one hypothetical purchase. Read-only: nothing is saved or paid."""
     return run_simulation(fetch_profile(), req)
+
+
+# ---- optional AI features -------------------------------------------------------------
+
+@app.get("/api/ai/status", response_model=AiStatus)
+def ai_status():
+    """Which optional features are configured. Never includes key values."""
+    s = get_ai_settings()
+    missing = []
+    if not s.explanations_available:
+        missing.append("ANTHROPIC_API_KEY")
+    if not s.speech_available:
+        missing.append("ELEVENLABS_API_KEY")
+    return AiStatus(
+        explanations=s.explanations_available,
+        speech=s.speech_available,
+        transcription=s.speech_available,
+        provider=s.provider if s.explanations_available else None,
+        model=s.anthropic_model if s.explanations_available else None,
+        missing=missing,
+    )
+
+
+@app.post("/api/explain", response_model=ExplainResponse)
+def explain(req: ExplainRequest):
+    """Explain the current comparison. Python recalculates the numbers; the model only explains them."""
+    provider = get_provider(get_ai_settings())
+    return run_explanation(fetch_profile(), req, provider)
+
+
+@app.post("/api/speech")
+def speak(req: SpeechRequest):
+    """Reads the given text aloud (MP3). Called only when the user presses Listen."""
+    audio = speech.synthesize(get_ai_settings(), req.text)
+    return Response(content=audio, media_type="audio/mpeg", headers={"X-Client-Tag": req.client_tag[:120]})
+
+
+@app.post("/api/transcribe", response_model=TranscriptResponse)
+async def transcribe(file: UploadFile = File(...), client_tag: str = Form("")):
+    """Turns a short recording into text. The browser shows it for editing before sending."""
+    data = await file.read(speech.MAX_AUDIO_BYTES + 1)
+    text = speech.transcribe(get_ai_settings(), data, file.filename or "", file.content_type or "")
+    return TranscriptResponse(text=text, client_tag=client_tag[:120])

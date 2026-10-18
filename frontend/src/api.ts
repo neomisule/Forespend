@@ -144,7 +144,38 @@ export interface SimulationResult {
   options: MethodOption[];
 }
 
-export type ApiErrorKind = "network" | "range" | "http" | "invalid";
+// ---- optional AI features --------------------------------------------------------
+
+export interface AiStatus {
+  explanations: boolean;
+  speech: boolean;
+  transcription: boolean;
+  provider: string | null;
+  model: string | null;
+  missing: string[];
+}
+
+export interface ExplainRequest {
+  simulation: SimulationRequest; // the server recalculates everything from these inputs
+  selected_method: PaymentMethod;
+  question: string;
+  cushion: string | null;
+  history: { question: string; answer: string }[]; // at most 3, oldest first
+  client_tag: string; // echoed back; lets the browser ignore replies for an old scenario
+}
+
+export interface ExplainResponse {
+  answer: string;
+  scenario_key: string;
+  client_tag: string;
+  provider: string;
+  model: string;
+  window_start: string;
+  window_end: string;
+  scheduled_through: string;
+}
+
+export type ApiErrorKind = "network" | "range" | "http" | "invalid" | "unavailable";
 
 export class ApiError extends Error {
   kind: ApiErrorKind;
@@ -156,19 +187,22 @@ export class ApiError extends Error {
   }
 }
 
-async function requestJson(path: string, signal?: AbortSignal, body?: unknown): Promise<unknown> {
+/** GET (no body), POST JSON (plain object), or POST a FormData. Returns the raw Response after error checks. */
+async function request(path: string, signal?: AbortSignal, body?: unknown, accept = "application/json"): Promise<Response> {
+  const isForm = body instanceof FormData;
   let res: Response;
   try {
     res = await fetch(path, {
       signal,
       method: body === undefined ? "GET" : "POST",
-      headers: { Accept: "application/json", ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: { Accept: accept, ...(body === undefined || isForm ? {} : { "Content-Type": "application/json" }) },
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
     });
   } catch (err) {
     if (signal?.aborted) throw err;
     throw new ApiError("network", "Could not reach the app server. Check that the frontend dev server is running.");
   }
+  if (res.ok) return res;
   const text = await res.text();
   let json: unknown = null;
   try {
@@ -176,13 +210,10 @@ async function requestJson(path: string, signal?: AbortSignal, body?: unknown): 
   } catch {
     json = null;
   }
-  if (res.ok) {
-    if (json === null) throw new ApiError("invalid", `The backend sent a response that was not JSON (${path}).`);
-    return json;
-  }
   // Our FastAPI handlers (including request validation) reply {"error": "..."}.
   const message =
     json && typeof json === "object" && "error" in json && typeof json.error === "string" ? json.error : null;
+  if (res.status === 503 && message) throw new ApiError("unavailable", message, 503);
   if (res.status === 422) {
     throw new ApiError("range", message ?? "Those dates are not supported by the backend.", 422);
   }
@@ -196,6 +227,15 @@ async function requestJson(path: string, signal?: AbortSignal, body?: unknown): 
     );
   }
   throw new ApiError("http", `The backend returned HTTP ${res.status} for ${path}.`, res.status);
+}
+
+async function requestJson(path: string, signal?: AbortSignal, body?: unknown): Promise<unknown> {
+  const res = await request(path, signal, body);
+  try {
+    return await res.json();
+  } catch {
+    throw new ApiError("invalid", `The backend sent a response that was not JSON (${path}).`);
+  }
 }
 
 // ---- tiny runtime checks ----------------------------------------------------
@@ -410,7 +450,49 @@ export async function fetchCalendar(
   return parseCalendar(await requestJson(`/api/calendar${query}`, signal));
 }
 
-/** Preview one hypothetical cash purchase. Nothing is saved and no money moves. */
+/** Preview one hypothetical purchase. Nothing is saved and no money moves. */
 export async function postSimulation(req: SimulationRequest, signal?: AbortSignal): Promise<SimulationResult> {
   return parseSimulation(await requestJson("/api/simulations", signal, req));
+}
+
+export async function fetchAiStatus(signal?: AbortSignal): Promise<AiStatus> {
+  const s = obj(await requestJson("/api/ai/status", signal), "ai status");
+  return {
+    explanations: s.explanations === true,
+    speech: s.speech === true,
+    transcription: s.transcription === true,
+    provider: typeof s.provider === "string" ? s.provider : null,
+    model: typeof s.model === "string" ? s.model : null,
+    missing: texts(s.missing, "ai status.missing"),
+  };
+}
+
+export async function postExplain(req: ExplainRequest, signal?: AbortSignal): Promise<ExplainResponse> {
+  const r = obj(await requestJson("/api/explain", signal, req), "explanation");
+  return {
+    answer: str(r, "answer", "explanation"),
+    scenario_key: str(r, "scenario_key", "explanation"),
+    client_tag: str(r, "client_tag", "explanation"),
+    provider: str(r, "provider", "explanation"),
+    model: str(r, "model", "explanation"),
+    window_start: date(r, "window_start", "explanation"),
+    window_end: date(r, "window_end", "explanation"),
+    scheduled_through: date(r, "scheduled_through", "explanation"),
+  };
+}
+
+/** Audio (MP3) for exactly the text shown on screen. */
+export async function postSpeech(text: string, clientTag: string, signal?: AbortSignal): Promise<Blob> {
+  const res = await request("/api/speech", signal, { text, client_tag: clientTag }, "audio/mpeg");
+  if ((res.headers.get("X-Client-Tag") ?? "") !== clientTag) throw new ApiError("invalid", "Audio arrived for a different answer.");
+  return res.blob();
+}
+
+export async function postTranscribe(audio: Blob, filename: string, clientTag: string, signal?: AbortSignal): Promise<string> {
+  const form = new FormData();
+  form.append("file", audio, filename);
+  form.append("client_tag", clientTag);
+  const r = obj(await requestJson("/api/transcribe", signal, form), "transcript");
+  if (str(r, "client_tag", "transcript") !== clientTag) throw new ApiError("invalid", "Transcript arrived for a different request.");
+  return str(r, "text", "transcript");
 }

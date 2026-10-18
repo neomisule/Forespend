@@ -1,9 +1,11 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
-import type { ApiError, MethodOption, PaymentMethod, SimulationResult } from "../api";
+import type { AiStatus, ApiError, MethodOption, PaymentMethod, SimulationRequest, SimulationResult } from "../api";
 import type { ConceptId } from "../content/concepts";
+import { scenarioTag } from "../lib/assistant";
 import { addDays, formatShortDate } from "../lib/dates";
 import { answers, cushionLabel, cushionStatus, interpret } from "../lib/interpretation";
 import { formatMoney, normalizeAmountInput, toCents } from "../lib/money";
+import { Assistant } from "./Assistant";
 import { TermHelp } from "./TermHelp";
 
 type Frequency = "weekly" | "biweekly" | "monthly";
@@ -128,6 +130,9 @@ interface Props {
   sim: SimState | null;
   selectedMethod: PaymentMethod;
   onSelectMethod: (m: PaymentMethod) => void;
+  simRequest: SimulationRequest | null; // what was sent to the backend for the current month
+  simKey: string | null;
+  aiStatus: AiStatus | null;
   calendarUnavailable: boolean;
   focusRequest: number;
   onPreview: (e: Experiment) => void;
@@ -227,6 +232,9 @@ export function ExperimentPanel(props: Props) {
               onSelect={props.onSelectMethod}
               cushion={cushion}
               onCushion={setCushion}
+              simRequest={props.simRequest}
+              simKey={props.simKey}
+              aiStatus={props.aiStatus}
             />
           )}
         </div>
@@ -474,12 +482,18 @@ function Comparison({
   onSelect,
   cushion,
   onCushion,
+  simRequest,
+  simKey,
+  aiStatus,
 }: {
   data: SimulationResult;
   selected: PaymentMethod;
   onSelect: (m: PaymentMethod) => void;
   cushion: string | null;
   onCushion: (c: string | null) => void;
+  simRequest: SimulationRequest | null;
+  simKey: string | null;
+  aiStatus: AiStatus | null;
 }) {
   const chosen = data.options.find((o) => o.method === selected) ?? data.options[0];
   const uid = useId();
@@ -527,6 +541,17 @@ function Comparison({
         <p className="mt-2">{meaning.tradeoff}</p>
         {meaning.limitation && <p className="mt-2 text-xs text-navy-soft">{meaning.limitation}</p>}
       </section>
+
+      {simRequest && simKey && (
+        <Assistant
+          data={data}
+          simRequest={simRequest}
+          selectedMethod={chosen.method}
+          cushion={cushion}
+          scenarioTag={scenarioTag(simKey, chosen.method, cushion)}
+          aiStatus={aiStatus}
+        />
+      )}
 
       {chosen.warnings.some((w) => w.includes("does not cover") || w.includes("not repaid")) && (
         <ul className="flex flex-col gap-1 rounded-2xl bg-amber-50 p-3 text-sm text-amber-950">
