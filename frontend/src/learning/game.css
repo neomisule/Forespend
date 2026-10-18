@@ -1282,28 +1282,6 @@
   line-height: 1.45;
 }
 
-@media (min-width: 900px) {
-  .game-header,
-  .game-app main {
-    position: relative;
-    left: 44px;
-  }
-
-  .game-header .game-brand {
-    visibility: hidden;
-  }
-
-  .game-app footer {
-    margin-left: 88px;
-  }
-}
-
-@media (max-width: 899px) {
-  .game-sidebar {
-    display: none;
-  }
-}
-
 @media (max-width: 760px) {
   .story-layout, .simulator-layout { grid-template-columns: 1fr; }
   .level-cards { grid-template-columns: 1fr; }

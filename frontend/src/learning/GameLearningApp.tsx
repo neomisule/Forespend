@@ -87,17 +87,6 @@ function GameLearningApp() {
 
   return (
     <div className="game-app">
-      <aside className="game-sidebar" aria-label="Game navigation">
-        <a href="#lesson" className="side-logo" aria-label="Money Lab home">M</a>
-        <nav>
-          <a className="active" href="#lesson"><span aria-hidden="true">◆</span><small>Quests</small></a>
-        </nav>
-        <div className="side-level" aria-label="Player level 2">
-          <span>2</span>
-          <small>LEVEL</small>
-        </div>
-      </aside>
-
       <header className="game-header">
         <a href="#lesson" className="game-brand">
           <span aria-hidden="true">M</span>
