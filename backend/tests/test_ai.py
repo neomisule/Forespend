@@ -225,11 +225,12 @@ def test_speech_reads_the_given_text(client, monkeypatch):
         return FakeResponse(content=b"ID3fake-mp3")
     monkeypatch.setattr(speech.httpx, "request", fake_request)
     monkeypatch.setattr(speech, "_default_voice", None)
-    r = client.post("/api/speech", json={"text": "Cash takes $600 now.", "client_tag": "t9"})
+    r = client.post("/api/speech", json={"text": "Cash takes $600 now, on Oct 24, 2026.", "client_tag": "t9"})
     assert r.status_code == 200 and r.headers["content-type"].startswith("audio/mpeg")
     assert r.content == b"ID3fake-mp3" and r.headers["x-client-tag"] == "t9"
     assert seen["url"].endswith("/text-to-speech/voice-abc")
-    assert seen["kw"]["json"] == {"text": "Cash takes $600 now.", "model_id": "tts-x"}
+    # The voice gets the spoken form; the visible answer in the browser is untouched.
+    assert seen["kw"]["json"] == {"text": "Cash takes six hundred dollars now, on October twenty-fourth, twenty twenty-six.", "model_id": "tts-x"}
     assert seen["kw"]["headers"]["xi-api-key"] == "y" and seen["kw"]["params"] == {"output_format": "mp3_44100_128"}
 
 

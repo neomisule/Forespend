@@ -12,6 +12,7 @@ import httpx
 
 from ..config import AiSettings
 from .providers import AiUnavailableError, ProviderError
+from .speech_text import normalize_for_speech
 
 BASE_URL = "https://api.elevenlabs.io/v1"
 MAX_SPEECH_CHARS = 2000
@@ -21,6 +22,13 @@ TTS_TIMEOUT = httpx.Timeout(45.0)
 STT_TIMEOUT = httpx.Timeout(60.0)
 
 logging.getLogger("httpx").setLevel(logging.WARNING)  # its INFO logs would include request URLs
+log = logging.getLogger("forespend.speech")
+if not log.handlers:  # uvicorn configures only its own loggers; give this one a plain console line
+    _h = logging.StreamHandler()
+    _h.setFormatter(logging.Formatter("%(levelname)s:     %(message)s"))
+    log.addHandler(_h)
+    log.setLevel(logging.INFO)
+    log.propagate = False
 
 _default_voice: str | None = None  # looked up once per process when ELEVENLABS_VOICE_ID is blank
 
@@ -111,6 +119,10 @@ def synthesize(settings: AiSettings, text: str) -> bytes:
         raise ProviderError("There is no text to read.", 422)
     if len(text) > MAX_SPEECH_CHARS:
         raise ProviderError(f"That text is too long to read aloud (limit {MAX_SPEECH_CHARS} characters).", 422)
+    # Dates, money and percentages as words, so the voice says "October twenty-fourth" and
+    # "six hundred dollars" instead of spelling "O C T" or reading "dollar six hundred point zero zero".
+    text = normalize_for_speech(text)
+    log.info("text-to-speech text (%d chars): %s", len(text), text)  # the exact words sent; never the key
     voice = default_voice_id(settings)
     resp = _call(
         "POST",
