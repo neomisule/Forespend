@@ -185,6 +185,22 @@ def test_cut_off_answers_end_at_a_full_sentence():
     assert _complete_sentences("Cash costs nothing ext") == ""  # better an error than half a thought
 
 
+def test_prompt_money_is_formatted_like_the_app():
+    from app.ai.explain import _usd
+
+    assert _usd("1200.00") == "$1,200.00"
+    assert _usd("-430.00") == "-$430.00"  # never "$-430.00"
+    assert _usd("0.00") == "$0.00"
+
+
+def test_system_prompt_asks_for_a_direct_answer_then_a_short_comparison(client):
+    client.post("/api/explain", json=explain_body())
+    system = FakeProvider.calls[0]["system"]
+    assert "direct answer" in system and "Cash, Installments, Credit" in system
+    assert "no headings, no tables" in system and "no HTML" in system
+    assert "-$430.00, never $-430.00" in system
+
+
 def test_status_reports_configured_features(client):
     assert client.get("/api/ai/status").json() == {
         "explanations": True, "speech": True, "transcription": True,

@@ -24,8 +24,10 @@ export function DayDetails({ day, referenceDate, preview, onClose }: Props) {
       subtitle={
         <p>
           <strong className="text-navy">{day.status === "past" ? "Past day" : "Projected day"}</strong>{" "}
-          {day.status === "past" ? `(on or before the demo day, ${ref})` : `(after the demo day, ${ref})`}
-          {day.isToday && " · Today"}
+          {day.status === "past"
+            ? `(on or before ${ref}, the day this demo treats as now; activity is treated as already happened)`
+            : `(after ${ref}, the day this demo treats as now; balances marked ≈ are estimates)`}
+          {day.isToday && " · Today on your calendar"}
           {preview && (preview === "invest" ? " · Showing: with your investing plan" : " · Showing: with your purchase")}
         </p>
       }

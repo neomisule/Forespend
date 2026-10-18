@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import {
   ApiError,
@@ -39,6 +39,7 @@ import {
   todayISO,
   type YearMonth,
 } from "./lib/dates";
+import { balancesFitGrid } from "./lib/layout";
 import { formatMoney } from "./lib/money";
 
 type Load<T> = { status: "loading" } | { status: "ready"; data: T } | { status: "error"; error: ApiError };
@@ -364,7 +365,27 @@ function CalendarApp({
   const monthBeyondSchedule = !!shown && shown.end_date > shown.scheduled_through;
 
   const [view, setView] = useState<"calendar" | "list">("calendar");
+  // The grid is only used when every balance fits its cell whole (measured, so large text or a
+  // narrow window falls back to the list instead of overflowing). Nothing is shrunk or hidden.
+  const gridArea = useRef<HTMLDivElement>(null);
+  const widestBalance = useMemo(() => {
+    let widest = "";
+    for (const d of days.values()) {
+      if (d.closingChecking === null) continue;
+      const text = `${d.status === "projected" ? "≈" : ""}${formatMoney(d.closingChecking)}`;
+      if (text.length > widest.length) widest = text;
+    }
+    return widest;
+  }, [days]);
+  const { fits: gridFits, probe } = useGridFits(gridArea, widestBalance);
+  const showGrid = view === "calendar" && gridFits;
+  // The date whose details were last opened. It stays marked after the dialog closes.
   const [selected, setSelected] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const openDay = useCallback((date: string) => {
+    setSelected(date);
+    setDetailsOpen(true);
+  }, []);
   const [focusRequest, setFocusRequest] = useState(0);
   // Optional "keep at least $X in checking"; lives here so the assistant can see it too.
   const [cushion, setCushion] = useState<string | null>(null);
@@ -414,7 +435,8 @@ function CalendarApp({
   }, [lessonPreset, onPresetUsed]);
 
   const referenceMonth = referenceDate ? monthOf(referenceDate) : null;
-  const selectedDay = selected ? days.get(selected) : undefined;
+  const selectedDay = detailsOpen && selected ? days.get(selected) : undefined;
+  const preview: PreviewKind = showingInvest ? "invest" : showingExperiment ? "purchase" : null;
   const monthTitle = month ? formatMonthTitle(month) : null;
 
   return (
@@ -461,8 +483,12 @@ function CalendarApp({
 
           <section
             aria-labelledby="month-title"
-            className="lab-card min-w-0 p-3 sm:p-4 lg:col-start-1 lg:row-start-1"
+            className="lab-card relative min-w-0 p-3 sm:p-4 lg:col-start-1 lg:row-start-1"
           >
+            {/* Measures how wide this month's longest balance is at the current text size. */}
+            <span ref={probe} aria-hidden="true" className="invisible absolute top-0 left-0 text-xs font-semibold whitespace-nowrap tabular-nums">
+              {widestBalance}
+            </span>
             <Toolbar
               month={month}
               referenceMonth={referenceMonth}
@@ -480,12 +506,15 @@ function CalendarApp({
                   : "Running the numbers… showing the original calendar for now."}
               </p>
             )}
-            <Legend
-              referenceDate={referenceDate}
-              preview={showingInvest ? "invest" : showingExperiment ? "purchase" : null}
-              scheduledThrough={monthBeyondSchedule && shown ? shown.scheduled_through : null}
-            />
+            <Legend preview={preview} scheduledThrough={monthBeyondSchedule && shown ? shown.scheduled_through : null} />
 
+            {view === "calendar" && !gridFits && shown && (
+              <p role="status" className="mt-2 text-xs text-navy-soft">
+                Showing the list: the month grid doesn’t have room for whole balances at this size.
+              </p>
+            )}
+            {/* The measured area is this stable wrapper; the keyed child remounts when the numbers change. */}
+            <div ref={gridArea}>
             <div key={shownKey} className="mt-2 motion-safe:animate-refresh" aria-busy={calendar.status === "loading"}>
               {calendar.status === "error" ? (
                 <ErrorPanel
@@ -501,18 +530,18 @@ function CalendarApp({
                 </p>
               ) : (
                 <>
-                  {view === "calendar" ? (
+                  {showGrid ? (
                     <>
                       {/* Seven columns don't fit a phone, so small screens get the list. */}
                       <div className="hidden md:block">
-                        <MonthGrid month={month} days={days} onOpenDay={setSelected} reserveBelow={RESERVE_BELOW_GRID} />
+                        <MonthGrid month={month} days={days} selectedDate={selected} onOpenDay={openDay} reserveBelow={RESERVE_BELOW_GRID} />
                       </div>
                       <div className="md:hidden">
-                        <ListView dates={datesInMonth(month)} days={days} onOpenDay={setSelected} />
+                        <ListView dates={datesInMonth(month)} days={days} selectedDate={selected} preview={preview} onOpenDay={openDay} />
                       </div>
                     </>
                   ) : (
-                    <ListView dates={datesInMonth(month)} days={days} onOpenDay={setSelected} />
+                    <ListView dates={datesInMonth(month)} days={days} selectedDate={selected} preview={preview} onOpenDay={openDay} />
                   )}
                   <MonthTotals
                     calendar={shown}
@@ -521,23 +550,50 @@ function CalendarApp({
                 </>
               )}
             </div>
+            </div>
           </section>
         </div>
       </main>
 
       {selectedDay && referenceDate && (
-        <DayDetails
-          day={selectedDay}
-          referenceDate={referenceDate}
-          preview={showingInvest ? "invest" : showingExperiment ? "purchase" : null}
-          onClose={() => setSelected(null)}
-        />
+        <DayDetails day={selectedDay} referenceDate={referenceDate} preview={preview} onClose={() => setDetailsOpen(false)} />
       )}
     </div>
   );
 }
 
 // ---- small page pieces -------------------------------------------------------------
+
+/**
+ * Measures the calendar area and a hidden copy of the month's widest balance, and
+ * says whether the grid can show that balance whole. Re-measured whenever the area
+ * or the text size changes (both are observed), so zooming in switches to the list
+ * and zooming out brings the grid back.
+ */
+function useGridFits(area: RefObject<HTMLDivElement | null>, widestBalance: string) {
+  const probe = useRef<HTMLSpanElement>(null);
+  const [fits, setFits] = useState(true);
+  useLayoutEffect(() => {
+    const el = area.current;
+    const p = probe.current;
+    if (!el || !p) return;
+    const update = () => {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const next = !widestBalance || balancesFitGrid(p.offsetWidth, el.clientWidth, rem);
+      setFits((prev) => (prev === next ? prev : next));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    ro.observe(p);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [area, widestBalance]);
+  return { fits, probe };
+}
 
 /**
  * On wide screens: a sticky panel with its own scrollbar, plus a "More below"
@@ -717,50 +773,41 @@ function Toolbar(p: ToolbarProps) {
   );
 }
 
-function Legend({
-  referenceDate,
-  preview,
-  scheduledThrough,
-}: {
-  referenceDate: string | null;
-  preview: PreviewKind;
-  scheduledThrough: string | null;
-}) {
+/**
+ * One short line. Each cell's amount is checking at the end of that day; "≈" marks a
+ * projected (estimated) day; the pink chip is the planned payment being previewed. The
+ * day details explain sources, certainty and the reference date in full.
+ */
+function Legend({ preview, scheduledThrough }: { preview: PreviewKind; scheduledThrough: string | null }) {
   return (
-    <ul aria-label="How to read the calendar" className="mt-1.5 flex flex-wrap gap-x-3.5 gap-y-0.5 text-xs text-navy-soft">
-      <li>
-        Amount = <strong className="text-navy">checking at end of day</strong>
-      </li>
-      <li>
-        <strong className="text-navy">≈</strong> projected
-      </li>
-      {referenceDate && (
-        <li>
-          <span className="font-semibold text-accent underline decoration-2 underline-offset-2">Blue date</span> = demo day (
-          {formatShortDate(referenceDate).replace(/, \d{4}$/, "")}) ·{" "}
-          <span className="rounded-full px-1 ring-1 ring-navy-soft">circled</span> = today
-        </li>
+    <p className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs text-navy-soft">
+      <span className="sr-only">How to read the calendar: </span>
+      <span>
+        Daily <span className="font-semibold text-navy">balance</span>
+      </span>
+      <span aria-hidden="true">·</span>
+      <span>
+        <span className="font-semibold text-navy">≈</span> projected
+      </span>
+      {preview && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span className="flex items-baseline gap-1.5">
+            <span aria-hidden="true" className="inline-block h-2.5 w-4 rounded-sm border border-lilac/40 bg-lilac-soft align-middle" />
+            planned {preview === "invest" ? "contribution" : "payment"}
+          </span>
+        </>
       )}
       {scheduledThrough && (
-        <li>
-          <span className="rounded bg-[repeating-linear-gradient(135deg,transparent_0_4px,rgb(20_26_58/0.12)_4px_6px)] px-1">
-            striped
-          </span>{" "}
-          = no bills or pay known after {formatShortDate(scheduledThrough).replace(/, \d{4}$/, "")} (not a full budget)
-        </li>
+        <>
+          <span aria-hidden="true">·</span>
+          <span>
+            <span className="rounded bg-[repeating-linear-gradient(135deg,transparent_0_4px,rgb(20_26_58/0.12)_4px_6px)] px-1">striped</span>{" "}
+            no bills or pay known after {formatShortDate(scheduledThrough).replace(/, \d{4}$/, "")}
+          </span>
+        </>
       )}
-      <li>
-        <strong className="text-emerald-800">+</strong> in · <strong className="text-rose-800">−</strong> out ·{" "}
-        <span className="rounded border border-dashed border-navy-soft px-0.5">dashed</span> = estimate
-      </li>
-      {preview && (
-        <li>
-          <strong className="text-lilac">Try:</strong> {preview === "invest" ? "your plan’s contributions" : "your purchase’s payments"} ·{" "}
-          <strong className="text-lilac">▼</strong> lower because of it
-        </li>
-      )}
-      <li>⚠ below $0.00</li>
-    </ul>
+    </p>
   );
 }
 

@@ -1,19 +1,16 @@
 import type { DayInfo } from "../lib/calendarModel";
 import { formatMoney } from "../lib/money";
 
-/** Small text markers. "Demo day" is the day the demo treats as now; "Today" is your real date. */
-export function DayMarkers({ day }: { day: Pick<DayInfo, "isReferenceDate" | "isToday"> }) {
+/** "Today" is the viewer's real date (their own clock), shown as a small periwinkle pill. */
+export function TodayLabel() {
   return (
-    <>
-      {day.isReferenceDate && <span className="text-[0.6875rem] font-semibold text-accent">Demo day</span>}
-      {day.isToday && <span className="text-[0.6875rem] font-semibold text-navy-soft">Today</span>}
-    </>
+    <span className="rounded-full bg-accent px-1.5 py-px text-[0.625rem] font-bold tracking-wide text-white uppercase">Today</span>
   );
 }
 
 /**
- * End-of-day checking balance. Symbols explained by the legend:
- * "≈" projected (after the demo day), "▼" lower because of the experiment, "⚠" below $0.
+ * End-of-day checking balance. "≈" marks a projected day; a balance below $0 is a red
+ * negative number; a balance changed by the preview is pink (the details say by how much).
  */
 export function BalanceValue({ day }: { day: DayInfo }) {
   if (day.closingChecking === null) return null;
@@ -24,8 +21,6 @@ export function BalanceValue({ day }: { day: DayInfo }) {
         day.isShortfall ? "text-red-700" : changed ? "text-lilac" : "text-navy"
       }`}
     >
-      {day.isShortfall && <span aria-hidden="true">⚠ </span>}
-      {changed && <span aria-hidden="true">▼ </span>}
       {day.status === "projected" && <span aria-hidden="true">≈</span>}
       {formatMoney(day.closingChecking)}
       <span className="sr-only">

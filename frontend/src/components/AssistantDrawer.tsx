@@ -10,7 +10,9 @@ import {
   type AssistantContext,
 } from "../lib/assistant";
 import { interpret } from "../lib/interpretation";
+import { toPlainText } from "../lib/markdown";
 import { formatMoney } from "../lib/money";
+import { AnswerText } from "./AnswerText";
 
 interface Props {
   open: boolean;
@@ -208,7 +210,8 @@ export function AssistantDrawer({ open, onClose, context, aiStatus }: Props) {
     setAudio("loading");
     setAudioError(null);
     try {
-      const blob = await postSpeech(latest.text, `${latest.tag.slice(-80)}#audio${latest.id}`, ac.signal); // reads exactly the shown text
+      // Reads the shown answer as words: bold markers and bullet dashes are not spoken.
+      const blob = await postSpeech(toPlainText(latest.text), `${latest.tag.slice(-80)}#audio${latest.id}`, ac.signal);
       if (ac.signal.aborted) return;
       const url = URL.createObjectURL(blob);
       objectUrl.current = url;
@@ -434,7 +437,7 @@ export function AssistantDrawer({ open, onClose, context, aiStatus }: Props) {
                         </p>
                       )}
                       <p className="text-xs text-navy-soft">You asked: {a.question}</p>
-                      <p className="mt-1 whitespace-pre-line">{a.text}</p>
+                      <AnswerText source={a.text} className="mt-1.5" />
                       {isLatest && !outdated && aiStatus?.speech && (
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           {audio === "playing" ? (

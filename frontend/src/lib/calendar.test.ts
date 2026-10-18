@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import sample from "../../../backend/docs/calendar-sample-october.json";
 import { ApiError, parseCalendar, parseSimulation } from "../api";
 import simSample from "./simulation-sample-november.json";
-import { buildDays } from "./calendarModel";
+import { buildDays, compactLabel } from "./calendarModel";
 import { addMonths, datesInMonth, firstDay, formatFullDate, lastDay, monthGrid, todayISO } from "./dates";
+import { balancesFitGrid, cellContentWidth } from "./layout";
 import { differenceCents, formatMoney, formatMoneyCompact, normalizeAmountInput, toCents } from "./money";
 
 const october = { year: 2026, month: 10 };
@@ -143,5 +144,27 @@ describe("payment comparison (real backend response for November)", () => {
     expect(days.get("2026-11-06")?.beyondSchedule).toBe(false);
     expect(days.get("2026-11-07")?.beyondSchedule).toBe(true);
     expect(days.get("2026-11-15")?.originalChecking).toBe("1420.00"); // first card payment lowers checking
+  });
+});
+
+describe("event chips", () => {
+  it("shortens planned-payment labels to the purchase name, never to a prefix", () => {
+    expect(compactLabel("Laptop · installment 2")).toBe("Laptop");
+    expect(compactLabel("Invest · transfer 1")).toBe("Invest");
+    expect(compactLabel("Rent")).toBe("Rent");
+    expect(compactLabel(" · odd")).toBe(" · odd");
+  });
+});
+
+describe("grid or list", () => {
+  // A 1366px laptop gives the calendar card about 820px for the grid; "≈$1,200.00" is ~68px at 16px text.
+  it("keeps the grid when the widest balance fits a cell, and switches to the list when it cannot", () => {
+    expect(Math.round(cellContentWidth(820, 16))).toBe(102);
+    expect(balancesFitGrid(68, 820, 16)).toBe(true);
+    // The same laptop at 125% text: balances are ~85px wide and cells ~98px, so the grid stays.
+    expect(balancesFitGrid(85, 820, 20)).toBe(true);
+    // A 1024px window at 125% text: the card is ~560px wide, cells ~60px: the list takes over.
+    expect(balancesFitGrid(85, 560, 20)).toBe(false);
+    expect(balancesFitGrid(68, 560, 16)).toBe(false);
   });
 });

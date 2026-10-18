@@ -84,3 +84,9 @@ export function certaintyLabel(certainty: string): string {
       return certainty;
   }
 }
+
+/** Grid chips show the thing, not the instalment number: "Laptop · installment 2" -> "Laptop". */
+export function compactLabel(label: string): string {
+  const head = label.split(" · ")[0].trim();
+  return head || label;
+}
