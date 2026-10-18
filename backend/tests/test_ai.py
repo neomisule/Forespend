@@ -214,6 +214,12 @@ def test_transcribe_failures_are_clear(client, monkeypatch):
     monkeypatch.setattr(speech.httpx, "request", lambda *a, **k: FakeResponse(status_code=401))
     r = client.post("/api/transcribe", files={"file": ("q.webm", io.BytesIO(b"abc"), "audio/webm")})
     assert r.status_code == 503 and "rejected the API key" in r.json()["error"]
+    # A restricted key: ElevenLabs says which permission is missing; we pass that on.
+    denied = {"detail": {"status": "missing_permissions", "message": "The API key you used is missing the permission voices_read to execute this operation."}}
+    monkeypatch.setattr(speech.httpx, "request", lambda *a, **k: FakeResponse(status_code=401, json_body=denied))
+    monkeypatch.setattr(speech, "_default_voice", None)
+    r = client.post("/api/speech", json={"text": "hello"})
+    assert r.status_code == 503 and "'voices_read' permission" in r.json()["error"] and "ELEVENLABS_VOICE_ID" in r.json()["error"]
     big = io.BytesIO(b"0" * (speech.MAX_AUDIO_BYTES + 1))
     r = client.post("/api/transcribe", files={"file": ("q.webm", big, "audio/webm")})
     assert r.status_code == 422 and "too large" in r.json()["error"]

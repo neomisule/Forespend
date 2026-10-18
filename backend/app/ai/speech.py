@@ -31,8 +31,27 @@ def _require_key(settings: AiSettings) -> dict:
     return {"xi-api-key": settings.elevenlabs_api_key}
 
 
+def _missing_permission(resp: httpx.Response) -> str | None:
+    """ElevenLabs keys can be restricted per feature; its 401 body names the missing permission."""
+    try:
+        body = resp.json()
+    except ValueError:
+        return None
+    detail = body.get("detail") if isinstance(body, dict) else None
+    if not isinstance(detail, dict) or detail.get("status") != "missing_permissions":
+        return None
+    msg = detail.get("message", "")
+    return msg.split("permission", 1)[1].split("to execute")[0].strip() if "permission" in msg else "(unknown)"
+
+
 def _raise_for(resp: httpx.Response, what: str) -> None:
     if resp.status_code == 401:
+        perm = _missing_permission(resp)
+        if perm:
+            hint = " Or set ELEVENLABS_VOICE_ID in backend/.env to skip the voice lookup." if perm == "voices_read" else ""
+            raise AiUnavailableError(
+                f"The ElevenLabs key is missing the '{perm}' permission. Enable it on the key in ElevenLabs.{hint}"
+            )
         raise AiUnavailableError("The speech service rejected the API key. Check ELEVENLABS_API_KEY in backend/.env.")
     if resp.status_code == 422:
         raise ProviderError(f"The speech service rejected the {what} request (invalid input or model id).", 422)

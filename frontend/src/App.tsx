@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ApiError,
   fetchAiStatus,
@@ -17,6 +17,7 @@ import { EMPTY_DRAFT, ExperimentPanel, type Draft, type Experiment, type SimStat
 import { ListView } from "./components/ListView";
 import { MonthGrid } from "./components/MonthGrid";
 import { MonthTotals } from "./components/MonthTotals";
+import GameLearningApp, { type LessonPreset } from "./learning/GameLearningApp";
 import { buildDays } from "./lib/calendarModel";
 import {
   addMonths,
@@ -42,7 +43,79 @@ function toApiError(err: unknown): ApiError {
   return err instanceof ApiError ? err : new ApiError("invalid", "Something unexpected went wrong.");
 }
 
+type MainView = "calendar" | "learn";
+
+/**
+ * Two sections: the money calendar and the Learn lessons. Both stay mounted
+ * (the inactive one is hidden) so switching never loses your experiment,
+ * loaded months, or lesson progress.
+ */
 export default function App() {
+  const [view, setView] = useState<MainView>("calendar");
+  const [lessonPreset, setLessonPreset] = useState<LessonPreset | null>(null);
+
+  return (
+    <>
+      <div hidden={view !== "calendar"}>
+        <CalendarApp
+          viewMenu={<ViewMenu view={view} onView={setView} />}
+          lessonPreset={lessonPreset}
+          onPresetUsed={() => setLessonPreset(null)}
+        />
+      </div>
+      <div hidden={view !== "learn"} className="min-h-dvh bg-sky-page font-sans text-navy">
+        <header className="relative z-30 mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-2.5 sm:px-6">
+          <p className="font-display text-xl font-semibold tracking-tight">
+            Money <span className="text-accent">Calendar</span>
+          </p>
+          <div className="ml-auto">
+            <ViewMenu view={view} onView={setView} />
+          </div>
+        </header>
+        <GameLearningApp
+          onTryInCalendar={(preset) => {
+            setLessonPreset(preset);
+            setView("calendar");
+            window.scrollTo({ top: 0 });
+          }}
+        />
+      </div>
+    </>
+  );
+}
+
+function ViewMenu({ view, onView }: { view: MainView; onView: (view: MainView) => void }) {
+  return (
+    <nav aria-label="Main sections" className="flex rounded-full bg-white p-1 shadow-soft">
+      {([
+        ["calendar", "Calendar"],
+        ["learn", "Learn"],
+      ] as const).map(([value, label]) => (
+        <button
+          key={value}
+          type="button"
+          aria-current={view === value ? "page" : undefined}
+          onClick={() => onView(value)}
+          className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+            view === value ? "bg-accent text-white" : "text-navy-soft hover:bg-accent-soft hover:text-navy"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function CalendarApp({
+  viewMenu,
+  lessonPreset,
+  onPresetUsed,
+}: {
+  viewMenu: ReactNode;
+  lessonPreset: LessonPreset | null; // set by a Learn lesson's "Try this in your calendar"
+  onPresetUsed: () => void;
+}) {
   // ---- profile: name + fetched account balances (never changed by a preview) ----
   const [profile, setProfile] = useState<Load<Profile>>({ status: "loading" });
   const [profileAttempt, setProfileAttempt] = useState(0);
@@ -195,6 +268,23 @@ export default function App() {
     setCalendarAttempt((n) => n + 1);
   }, []);
 
+  // "Try this in your calendar" from a Learn lesson: prefill the form with the lesson's
+  // purchase and card terms, then let the user press Compare (nothing runs automatically).
+  useEffect(() => {
+    if (!lessonPreset) return;
+    setExperiment(null);
+    setDraft({
+      ...EMPTY_DRAFT,
+      label: lessonPreset.label,
+      amount: lessonPreset.amount,
+      method: "credit",
+      apr: lessonPreset.apr,
+      monthlyPayment: lessonPreset.monthlyPayment,
+    });
+    setFocusRequest((n) => n + 1);
+    onPresetUsed();
+  }, [lessonPreset, onPresetUsed]);
+
   const referenceMonth = referenceDate ? monthOf(referenceDate) : null;
   const selectedDay = selected ? days.get(selected) : undefined;
   const monthTitle = month ? formatMonthTitle(month) : null;
@@ -208,6 +298,7 @@ export default function App() {
         </h1>
         <AccountStrip profile={profile} onRetry={retryAll} />
         <div className="ml-auto flex items-center gap-2">
+          {viewMenu}
           <button
             type="button"
             onClick={() => setFocusRequest((n) => n + 1)}

@@ -30,6 +30,12 @@ events are made-up demo data. Nothing here moves real money.
   calculation; the model only explains. Without keys the app shows its own
   calculated explanation and says the live assistant is unavailable.
 
+- **Learn** (top-bar section): short credit-card and investing quests with
+  predictions, simulators and quick checks. Credit toolkit terms open the same
+  explanations the calendar uses, and the credit simulator's "Try this purchase
+  in your calendar" prefills the purchase form with the lesson's laptop, APR and
+  payment plan.
+
 Known limits: bills and pay are only scheduled through Nov 6, 2026, so later
 days are not a complete budget; installment and credit terms are examples, not
 real offers.
