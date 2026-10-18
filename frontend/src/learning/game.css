@@ -1,6 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
-
-:root {
+.game-app {
   --g-ink: #30344f;
   --g-muted: #777991;
   --g-green: #718bd5;
@@ -11,9 +9,10 @@
   --g-line: #e9e4ef;
 }
 
-* { box-sizing: border-box; }
+.game-app,
+.game-app * { box-sizing: border-box; }
 
-body {
+.game-app {
   min-width: 320px;
   margin: 0;
   color: var(--g-ink);
@@ -21,20 +20,22 @@ body {
     radial-gradient(circle at 7% 15%, rgba(152, 177, 235, 0.18), transparent 22rem),
     radial-gradient(circle at 94% 4%, rgba(238, 170, 205, 0.2), transparent 22rem),
     var(--g-cream);
-  font-family: 'DM Sans', sans-serif;
+  font-family: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif;
 }
 
-button, select, input { font: inherit; }
+.game-app button,
+.game-app select,
+.game-app input { font: inherit; }
 
-button:focus-visible,
-select:focus-visible,
-input:focus-visible,
-a:focus-visible {
+.game-app button:focus-visible,
+.game-app select:focus-visible,
+.game-app input:focus-visible,
+.game-app a:focus-visible {
   outline: 3px solid #a8b9e8;
   outline-offset: 3px;
 }
 
-#root {
+.game-app {
   width: 100%;
   min-height: 100vh;
   margin: 0;
@@ -68,7 +69,7 @@ a:focus-visible {
   border: 3px solid white;
   border-radius: 15px;
   background: linear-gradient(145deg, #8ea7e7, #607dcc);
-  font-family: 'Manrope', sans-serif;
+  font-family: "Fredoka Variable", ui-rounded, sans-serif;
   font-size: 21px;
   font-weight: 800;
   text-decoration: none;
@@ -134,7 +135,7 @@ a:focus-visible {
   border: 3px solid white;
   border-radius: 50%;
   background: #f6cde1;
-  font-family: 'Manrope', sans-serif;
+  font-family: "Fredoka Variable", ui-rounded, sans-serif;
   font-weight: 800;
   box-shadow: 0 0 0 2px #e9b4cf;
 }
@@ -195,7 +196,7 @@ a:focus-visible {
   border: 3px solid white;
   border-radius: 14px;
   background: #f5cce0;
-  font-family: 'Manrope', sans-serif;
+  font-family: "Fredoka Variable", ui-rounded, sans-serif;
   font-weight: 800;
   box-shadow: 0 0 0 2px #e5b4cd;
 }
@@ -216,7 +217,7 @@ a:focus-visible {
   gap: 10px;
   align-items: center;
   color: var(--g-ink);
-  font-family: 'Manrope', sans-serif;
+  font-family: "Fredoka Variable", ui-rounded, sans-serif;
   font-size: 19px;
   font-weight: 800;
   text-decoration: none;
@@ -283,7 +284,7 @@ a:focus-visible {
 .game-hero h1 {
   margin: 0 0 12px;
   color: var(--g-ink);
-  font-family: 'Manrope', sans-serif;
+  font-family: "Fredoka Variable", ui-rounded, sans-serif;
   font-size: clamp(40px, 6vw, 62px);
   font-weight: 800;
   line-height: 1.05;
@@ -366,7 +367,7 @@ a:focus-visible {
 
 .level-path-heading > div { display: flex; flex-direction: column; }
 .level-path-heading > div > span { color: var(--g-dark); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
-.level-path-heading h2 { margin: 3px 0 0; color: var(--g-ink); font-family: 'Manrope', sans-serif; font-size: 21px; }
+.level-path-heading h2 { margin: 3px 0 0; color: var(--g-ink); font-family: "Fredoka Variable", ui-rounded, sans-serif; font-size: 21px; }
 .level-path-heading > small { color: var(--g-muted); font-size: 11px; font-weight: 700; }
 
 .level-cards {
@@ -405,7 +406,7 @@ a:focus-visible {
   border: 3px solid white;
   border-radius: 11px;
   background: var(--g-green);
-  font-family: 'Manrope', sans-serif;
+  font-family: "Fredoka Variable", ui-rounded, sans-serif;
   font-size: 13px;
   font-weight: 800;
   box-shadow: 0 0 0 2px #c7d2ef;
@@ -542,7 +543,7 @@ a:focus-visible {
   max-width: 650px;
   margin: 0 0 13px;
   color: var(--g-ink);
-  font-family: 'Manrope', sans-serif;
+  font-family: "Fredoka Variable", ui-rounded, sans-serif;
   font-size: clamp(28px, 4vw, 39px);
   font-weight: 800;
   line-height: 1.15;
@@ -1342,7 +1343,10 @@ a:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  .game-app,
+  .game-app *,
+  .game-app *::before,
+  .game-app *::after {
     scroll-behavior: auto !important;
     animation-duration: .01ms !important;
     transition-duration: .01ms !important;
