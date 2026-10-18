@@ -1,0 +1,345 @@
+{
+  "start_date": "2026-10-01",
+  "end_date": "2026-10-31",
+  "currency": "USD",
+  "demo_reference_date": "2026-10-17",
+  "retrieval_date": "2026-10-18",
+  "scheduled_through": "2026-11-06",
+  "opening_balances": {
+    "checking": "1670.00",
+    "savings": "400.00"
+  },
+  "events": [
+    {
+      "id": "demo-history-2026-10-01-rent-utilities",
+      "date": "2026-10-01",
+      "label": "Rent/utilities",
+      "amount": "850.00",
+      "direction": "out",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_history",
+      "certainty": "historical",
+      "period": "past"
+    },
+    {
+      "id": "demo-history-2026-10-04-groceries",
+      "date": "2026-10-04",
+      "label": "Groceries",
+      "amount": "65.00",
+      "direction": "out",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_history",
+      "certainty": "historical",
+      "period": "past"
+    },
+    {
+      "id": "demo-history-2026-10-06-transport",
+      "date": "2026-10-06",
+      "label": "Transport",
+      "amount": "30.00",
+      "direction": "out",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_history",
+      "certainty": "historical",
+      "period": "past"
+    },
+    {
+      "id": "demo-history-2026-10-09-part-time-pay",
+      "date": "2026-10-09",
+      "label": "Part-time pay",
+      "amount": "650.00",
+      "direction": "in",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_history",
+      "certainty": "historical",
+      "period": "past"
+    },
+    {
+      "id": "demo-history-2026-10-11-groceries",
+      "date": "2026-10-11",
+      "label": "Groceries",
+      "amount": "72.00",
+      "direction": "out",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_history",
+      "certainty": "historical",
+      "period": "past"
+    },
+    {
+      "id": "demo-history-2026-10-13-subscription",
+      "date": "2026-10-13",
+      "label": "Subscription",
+      "amount": "15.00",
+      "direction": "out",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_history",
+      "certainty": "historical",
+      "period": "past"
+    },
+    {
+      "id": "demo-history-2026-10-15-dining",
+      "date": "2026-10-15",
+      "label": "Dining out",
+      "amount": "28.00",
+      "direction": "out",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_history",
+      "certainty": "historical",
+      "period": "past"
+    },
+    {
+      "id": "demo-history-2026-10-16-groceries",
+      "date": "2026-10-16",
+      "label": "Groceries",
+      "amount": "60.00",
+      "direction": "out",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_history",
+      "certainty": "historical",
+      "period": "past"
+    },
+    {
+      "id": "demo-estimate-2026-10-20-phone-bill",
+      "date": "2026-10-20",
+      "label": "Phone bill",
+      "amount": "45.00",
+      "direction": "out",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_assumption",
+      "certainty": "estimated",
+      "period": "projected"
+    },
+    {
+      "id": "demo-estimate-2026-10-22-groceries",
+      "date": "2026-10-22",
+      "label": "Groceries",
+      "amount": "70.00",
+      "direction": "out",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_assumption",
+      "certainty": "estimated",
+      "period": "projected"
+    },
+    {
+      "id": "demo-estimate-2026-10-23-part-time-pay",
+      "date": "2026-10-23",
+      "label": "Part-time pay",
+      "amount": "650.00",
+      "direction": "in",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_assumption",
+      "certainty": "estimated",
+      "period": "projected"
+    },
+    {
+      "id": "demo-estimate-2026-10-25-transport",
+      "date": "2026-10-25",
+      "label": "Transport",
+      "amount": "30.00",
+      "direction": "out",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_assumption",
+      "certainty": "estimated",
+      "period": "projected"
+    },
+    {
+      "id": "demo-estimate-2026-10-27-subscription",
+      "date": "2026-10-27",
+      "label": "Subscription",
+      "amount": "15.00",
+      "direction": "out",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_assumption",
+      "certainty": "estimated",
+      "period": "projected"
+    },
+    {
+      "id": "demo-estimate-2026-10-29-groceries",
+      "date": "2026-10-29",
+      "label": "Groceries",
+      "amount": "70.00",
+      "direction": "out",
+      "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+      "source": "demo_assumption",
+      "certainty": "estimated",
+      "period": "projected"
+    }
+  ],
+  "daily_balances": [
+    {
+      "date": "2026-10-01",
+      "checking": "820.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-02",
+      "checking": "820.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-03",
+      "checking": "820.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-04",
+      "checking": "755.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-05",
+      "checking": "755.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-06",
+      "checking": "725.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-07",
+      "checking": "725.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-08",
+      "checking": "725.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-09",
+      "checking": "1375.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-10",
+      "checking": "1375.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-11",
+      "checking": "1303.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-12",
+      "checking": "1303.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-13",
+      "checking": "1288.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-14",
+      "checking": "1288.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-15",
+      "checking": "1260.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-16",
+      "checking": "1200.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-17",
+      "checking": "1200.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-18",
+      "checking": "1200.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-19",
+      "checking": "1200.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-20",
+      "checking": "1155.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-21",
+      "checking": "1155.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-22",
+      "checking": "1085.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-23",
+      "checking": "1735.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-24",
+      "checking": "1735.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-25",
+      "checking": "1705.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-26",
+      "checking": "1705.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-27",
+      "checking": "1690.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-28",
+      "checking": "1690.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-29",
+      "checking": "1620.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-30",
+      "checking": "1620.00",
+      "savings": "400.00"
+    },
+    {
+      "date": "2026-10-31",
+      "checking": "1620.00",
+      "savings": "400.00"
+    }
+  ],
+  "lowest_checking": {
+    "date": "2026-10-06",
+    "balance": "725.00"
+  },
+  "shortfall_dates": [],
+  "summary": {
+    "spent_so_far": "1120.00",
+    "income_so_far": "650.00",
+    "projected_spending": "230.00",
+    "projected_income": "650.00"
+  },
+  "assumptions": [
+    "Account balances come from the Capital One Nessie sandbox; everything else here is fictional demo data.",
+    "Transactions dated 2026-10-01 to 2026-10-17 are app demo history (source 'demo_history'), not records fetched from Nessie. They were chosen to be consistent with the current checking balance.",
+    "The opening balance on 2026-10-01 is derived by undoing that history from the current balance; the current balance is not changed or counted twice.",
+    "Events after 2026-10-17 are estimates (source 'demo_assumption', certainty 'estimated').",
+    "The Nessie balances are treated as of the demo reference date 2026-10-17 so the demo stays stable; retrieval_date is the real date they were fetched.",
+    "Savings stays flat and is never used automatically to cover checking.",
+    "No payments, deposits or Nessie balance changes are made."
+  ]
+}

@@ -1,0 +1,1413 @@
+{
+  "purchase": {
+    "id": "experiment-cash-purchase",
+    "date": "2026-10-24",
+    "label": "Laptop",
+    "amount": "600.00",
+    "direction": "out",
+    "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+    "source": "experiment",
+    "certainty": "hypothetical",
+    "period": "projected"
+  },
+  "payment": "installments",
+  "baseline": {
+    "start_date": "2026-11-01",
+    "end_date": "2026-11-30",
+    "currency": "USD",
+    "demo_reference_date": "2026-10-17",
+    "retrieval_date": "2026-10-18",
+    "scheduled_through": "2026-11-06",
+    "opening_balances": {
+      "checking": "1620.00",
+      "savings": "400.00"
+    },
+    "events": [
+      {
+        "id": "demo-estimate-2026-11-01-rent-utilities",
+        "date": "2026-11-01",
+        "label": "Rent/utilities",
+        "amount": "850.00",
+        "direction": "out",
+        "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+        "source": "demo_assumption",
+        "certainty": "estimated",
+        "period": "projected"
+      },
+      {
+        "id": "demo-estimate-2026-11-06-part-time-pay",
+        "date": "2026-11-06",
+        "label": "Part-time pay",
+        "amount": "650.00",
+        "direction": "in",
+        "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+        "source": "demo_assumption",
+        "certainty": "estimated",
+        "period": "projected"
+      }
+    ],
+    "daily_balances": [
+      {
+        "date": "2026-11-01",
+        "checking": "770.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-02",
+        "checking": "770.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-03",
+        "checking": "770.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-04",
+        "checking": "770.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-05",
+        "checking": "770.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-06",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-07",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-08",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-09",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-10",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-11",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-12",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-13",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-14",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-15",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-16",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-17",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-18",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-19",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-20",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-21",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-22",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-23",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-24",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-25",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-26",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-27",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-28",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-29",
+        "checking": "1420.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-30",
+        "checking": "1420.00",
+        "savings": "400.00"
+      }
+    ],
+    "lowest_checking": {
+      "date": "2026-11-01",
+      "balance": "770.00"
+    },
+    "shortfall_dates": [],
+    "summary": {
+      "spent_so_far": "0.00",
+      "income_so_far": "0.00",
+      "projected_spending": "850.00",
+      "projected_income": "650.00"
+    },
+    "assumptions": [
+      "Account balances come from the Capital One Nessie sandbox; everything else here is fictional demo data.",
+      "Transactions dated 2026-10-01 to 2026-10-17 are app demo history (source 'demo_history'), not records fetched from Nessie. They were chosen to be consistent with the current checking balance.",
+      "The opening balance on 2026-10-01 is derived by undoing that history from the current balance; the current balance is not changed or counted twice.",
+      "Events after 2026-10-17 are estimates (source 'demo_assumption', certainty 'estimated').",
+      "The Nessie balances are treated as of the demo reference date 2026-10-17 so the demo stays stable; retrieval_date is the real date they were fetched.",
+      "Savings stays flat and is never used automatically to cover checking.",
+      "No payments, deposits or Nessie balance changes are made."
+    ]
+  },
+  "scenario": {
+    "start_date": "2026-11-01",
+    "end_date": "2026-11-30",
+    "currency": "USD",
+    "demo_reference_date": "2026-10-17",
+    "retrieval_date": "2026-10-18",
+    "scheduled_through": "2026-11-06",
+    "opening_balances": {
+      "checking": "1470.00",
+      "savings": "400.00"
+    },
+    "events": [
+      {
+        "id": "demo-estimate-2026-11-01-rent-utilities",
+        "date": "2026-11-01",
+        "label": "Rent/utilities",
+        "amount": "850.00",
+        "direction": "out",
+        "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+        "source": "demo_assumption",
+        "certainty": "estimated",
+        "period": "projected"
+      },
+      {
+        "id": "demo-estimate-2026-11-06-part-time-pay",
+        "date": "2026-11-06",
+        "label": "Part-time pay",
+        "amount": "650.00",
+        "direction": "in",
+        "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+        "source": "demo_assumption",
+        "certainty": "estimated",
+        "period": "projected"
+      },
+      {
+        "id": "experiment-installments-2",
+        "date": "2026-11-07",
+        "label": "Laptop \u00b7 payment 2",
+        "amount": "150.00",
+        "direction": "out",
+        "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+        "source": "experiment",
+        "certainty": "hypothetical",
+        "period": "projected"
+      },
+      {
+        "id": "experiment-installments-3",
+        "date": "2026-11-21",
+        "label": "Laptop \u00b7 payment 3",
+        "amount": "150.00",
+        "direction": "out",
+        "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+        "source": "experiment",
+        "certainty": "hypothetical",
+        "period": "projected"
+      }
+    ],
+    "daily_balances": [
+      {
+        "date": "2026-11-01",
+        "checking": "620.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-02",
+        "checking": "620.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-03",
+        "checking": "620.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-04",
+        "checking": "620.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-05",
+        "checking": "620.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-06",
+        "checking": "1270.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-07",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-08",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-09",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-10",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-11",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-12",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-13",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-14",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-15",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-16",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-17",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-18",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-19",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-20",
+        "checking": "1120.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-21",
+        "checking": "970.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-22",
+        "checking": "970.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-23",
+        "checking": "970.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-24",
+        "checking": "970.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-25",
+        "checking": "970.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-26",
+        "checking": "970.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-27",
+        "checking": "970.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-28",
+        "checking": "970.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-29",
+        "checking": "970.00",
+        "savings": "400.00"
+      },
+      {
+        "date": "2026-11-30",
+        "checking": "970.00",
+        "savings": "400.00"
+      }
+    ],
+    "lowest_checking": {
+      "date": "2026-11-01",
+      "balance": "620.00"
+    },
+    "shortfall_dates": [],
+    "summary": {
+      "spent_so_far": "0.00",
+      "income_so_far": "0.00",
+      "projected_spending": "1150.00",
+      "projected_income": "650.00"
+    },
+    "assumptions": [
+      "Account balances come from the Capital One Nessie sandbox; everything else here is fictional demo data.",
+      "Transactions dated 2026-10-01 to 2026-10-17 are app demo history (source 'demo_history'), not records fetched from Nessie. They were chosen to be consistent with the current checking balance.",
+      "The opening balance on 2026-10-01 is derived by undoing that history from the current balance; the current balance is not changed or counted twice.",
+      "Events after 2026-10-17 are estimates (source 'demo_assumption', certainty 'estimated').",
+      "The Nessie balances are treated as of the demo reference date 2026-10-17 so the demo stays stable; retrieval_date is the real date they were fetched.",
+      "Savings stays flat and is never used automatically to cover checking.",
+      "No payments, deposits or Nessie balance changes are made."
+    ]
+  },
+  "comparison": {
+    "period_start": "2026-11-01",
+    "period_end": "2026-11-30",
+    "ending_checking_before": "1420.00",
+    "ending_checking_after": "970.00",
+    "difference": "-450.00",
+    "window_start": "2026-10-24",
+    "window_end": "2026-11-30",
+    "lowest_before": {
+      "date": "2026-11-01",
+      "balance": "770.00"
+    },
+    "lowest_after": {
+      "date": "2026-11-01",
+      "balance": "620.00"
+    },
+    "outcome": "cushion",
+    "shortfall_dates_after": []
+  },
+  "assumptions": [
+    "The purchase is hypothetical: no payment is made and Nessie is not changed.",
+    "Cash means the full amount leaves checking on the purchase date. Savings is not used.",
+    "The lowest projected balance is checked from the purchase date through the last scheduled demo event (or the end of the period shown, if later). Estimates can change, so it is not a guaranteed safe amount."
+  ],
+  "coverage": {
+    "scheduled_through": "2026-11-06",
+    "window_start": "2026-10-24",
+    "window_end": "2026-11-30",
+    "window_beyond_coverage": true,
+    "not_scheduled_after": [
+      {
+        "label": "Phone bill",
+        "last_scheduled": "2026-10-20"
+      },
+      {
+        "label": "Transport",
+        "last_scheduled": "2026-10-25"
+      },
+      {
+        "label": "Subscription",
+        "last_scheduled": "2026-10-27"
+      },
+      {
+        "label": "Groceries",
+        "last_scheduled": "2026-10-29"
+      },
+      {
+        "label": "Rent/utilities",
+        "last_scheduled": "2026-11-01"
+      },
+      {
+        "label": "Part-time pay",
+        "last_scheduled": "2026-11-06"
+      }
+    ]
+  },
+  "options": [
+    {
+      "method": "cash",
+      "title": "Cash",
+      "terms": "Pay $600.00 from checking on Oct 24, 2026",
+      "scenario": {
+        "start_date": "2026-11-01",
+        "end_date": "2026-11-30",
+        "currency": "USD",
+        "demo_reference_date": "2026-10-17",
+        "retrieval_date": "2026-10-18",
+        "scheduled_through": "2026-11-06",
+        "opening_balances": {
+          "checking": "1020.00",
+          "savings": "400.00"
+        },
+        "events": [
+          {
+            "id": "demo-estimate-2026-11-01-rent-utilities",
+            "date": "2026-11-01",
+            "label": "Rent/utilities",
+            "amount": "850.00",
+            "direction": "out",
+            "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+            "source": "demo_assumption",
+            "certainty": "estimated",
+            "period": "projected"
+          },
+          {
+            "id": "demo-estimate-2026-11-06-part-time-pay",
+            "date": "2026-11-06",
+            "label": "Part-time pay",
+            "amount": "650.00",
+            "direction": "in",
+            "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+            "source": "demo_assumption",
+            "certainty": "estimated",
+            "period": "projected"
+          }
+        ],
+        "daily_balances": [
+          {
+            "date": "2026-11-01",
+            "checking": "170.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-02",
+            "checking": "170.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-03",
+            "checking": "170.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-04",
+            "checking": "170.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-05",
+            "checking": "170.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-06",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-07",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-08",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-09",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-10",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-11",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-12",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-13",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-14",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-15",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-16",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-17",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-18",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-19",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-20",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-21",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-22",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-23",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-24",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-25",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-26",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-27",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-28",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-29",
+            "checking": "820.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-30",
+            "checking": "820.00",
+            "savings": "400.00"
+          }
+        ],
+        "lowest_checking": {
+          "date": "2026-11-01",
+          "balance": "170.00"
+        },
+        "shortfall_dates": [],
+        "summary": {
+          "spent_so_far": "0.00",
+          "income_so_far": "0.00",
+          "projected_spending": "850.00",
+          "projected_income": "650.00"
+        },
+        "assumptions": [
+          "Account balances come from the Capital One Nessie sandbox; everything else here is fictional demo data.",
+          "Transactions dated 2026-10-01 to 2026-10-17 are app demo history (source 'demo_history'), not records fetched from Nessie. They were chosen to be consistent with the current checking balance.",
+          "The opening balance on 2026-10-01 is derived by undoing that history from the current balance; the current balance is not changed or counted twice.",
+          "Events after 2026-10-17 are estimates (source 'demo_assumption', certainty 'estimated').",
+          "The Nessie balances are treated as of the demo reference date 2026-10-17 so the demo stays stable; retrieval_date is the real date they were fetched.",
+          "Savings stays flat and is never used automatically to cover checking.",
+          "No payments, deposits or Nessie balance changes are made."
+        ]
+      },
+      "comparison": {
+        "period_start": "2026-11-01",
+        "period_end": "2026-11-30",
+        "ending_checking_before": "1420.00",
+        "ending_checking_after": "820.00",
+        "difference": "-600.00",
+        "window_start": "2026-10-24",
+        "window_end": "2026-11-30",
+        "lowest_before": {
+          "date": "2026-11-01",
+          "balance": "770.00"
+        },
+        "lowest_after": {
+          "date": "2026-11-01",
+          "balance": "170.00"
+        },
+        "outcome": "cushion",
+        "shortfall_dates_after": []
+      },
+      "paid_on_purchase_date": "600.00",
+      "last_payment_date": "2026-10-24",
+      "payments_after_scheduled_through": false,
+      "paid_from_checking_in_period": "0.00",
+      "paid_from_checking_in_window": "600.00",
+      "financing_cost_paid_in_window": "0.00",
+      "financing_cost_full_schedule": "0.00",
+      "total_paid_full_schedule": "600.00",
+      "full_schedule_complete": true,
+      "owed_at_window_end": "0.00",
+      "interest_or_fees_owed_at_window_end": "0.00",
+      "payoff_date": "2026-10-24",
+      "schedule": [
+        {
+          "number": 1,
+          "date": "2026-10-24",
+          "amount": "600.00",
+          "financing_part": "0.00",
+          "principal_part": "600.00",
+          "owed_after": "0.00",
+          "in_window": true
+        }
+      ],
+      "warnings": [],
+      "assumptions": [
+        "The purchase is hypothetical: no payment is made and Nessie is not changed.",
+        "Cash means the full amount leaves checking on the purchase date. Savings is not used."
+      ]
+    },
+    {
+      "method": "installments",
+      "title": "Installments",
+      "terms": "4 payments every 2 weeks from Oct 24, 2026, fixed fee $0.00 (hypothetical offer)",
+      "scenario": {
+        "start_date": "2026-11-01",
+        "end_date": "2026-11-30",
+        "currency": "USD",
+        "demo_reference_date": "2026-10-17",
+        "retrieval_date": "2026-10-18",
+        "scheduled_through": "2026-11-06",
+        "opening_balances": {
+          "checking": "1470.00",
+          "savings": "400.00"
+        },
+        "events": [
+          {
+            "id": "demo-estimate-2026-11-01-rent-utilities",
+            "date": "2026-11-01",
+            "label": "Rent/utilities",
+            "amount": "850.00",
+            "direction": "out",
+            "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+            "source": "demo_assumption",
+            "certainty": "estimated",
+            "period": "projected"
+          },
+          {
+            "id": "demo-estimate-2026-11-06-part-time-pay",
+            "date": "2026-11-06",
+            "label": "Part-time pay",
+            "amount": "650.00",
+            "direction": "in",
+            "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+            "source": "demo_assumption",
+            "certainty": "estimated",
+            "period": "projected"
+          },
+          {
+            "id": "experiment-installments-2",
+            "date": "2026-11-07",
+            "label": "Laptop \u00b7 payment 2",
+            "amount": "150.00",
+            "direction": "out",
+            "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+            "source": "experiment",
+            "certainty": "hypothetical",
+            "period": "projected"
+          },
+          {
+            "id": "experiment-installments-3",
+            "date": "2026-11-21",
+            "label": "Laptop \u00b7 payment 3",
+            "amount": "150.00",
+            "direction": "out",
+            "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+            "source": "experiment",
+            "certainty": "hypothetical",
+            "period": "projected"
+          }
+        ],
+        "daily_balances": [
+          {
+            "date": "2026-11-01",
+            "checking": "620.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-02",
+            "checking": "620.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-03",
+            "checking": "620.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-04",
+            "checking": "620.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-05",
+            "checking": "620.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-06",
+            "checking": "1270.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-07",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-08",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-09",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-10",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-11",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-12",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-13",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-14",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-15",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-16",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-17",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-18",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-19",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-20",
+            "checking": "1120.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-21",
+            "checking": "970.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-22",
+            "checking": "970.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-23",
+            "checking": "970.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-24",
+            "checking": "970.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-25",
+            "checking": "970.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-26",
+            "checking": "970.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-27",
+            "checking": "970.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-28",
+            "checking": "970.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-29",
+            "checking": "970.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-30",
+            "checking": "970.00",
+            "savings": "400.00"
+          }
+        ],
+        "lowest_checking": {
+          "date": "2026-11-01",
+          "balance": "620.00"
+        },
+        "shortfall_dates": [],
+        "summary": {
+          "spent_so_far": "0.00",
+          "income_so_far": "0.00",
+          "projected_spending": "1150.00",
+          "projected_income": "650.00"
+        },
+        "assumptions": [
+          "Account balances come from the Capital One Nessie sandbox; everything else here is fictional demo data.",
+          "Transactions dated 2026-10-01 to 2026-10-17 are app demo history (source 'demo_history'), not records fetched from Nessie. They were chosen to be consistent with the current checking balance.",
+          "The opening balance on 2026-10-01 is derived by undoing that history from the current balance; the current balance is not changed or counted twice.",
+          "Events after 2026-10-17 are estimates (source 'demo_assumption', certainty 'estimated').",
+          "The Nessie balances are treated as of the demo reference date 2026-10-17 so the demo stays stable; retrieval_date is the real date they were fetched.",
+          "Savings stays flat and is never used automatically to cover checking.",
+          "No payments, deposits or Nessie balance changes are made."
+        ]
+      },
+      "comparison": {
+        "period_start": "2026-11-01",
+        "period_end": "2026-11-30",
+        "ending_checking_before": "1420.00",
+        "ending_checking_after": "970.00",
+        "difference": "-450.00",
+        "window_start": "2026-10-24",
+        "window_end": "2026-11-30",
+        "lowest_before": {
+          "date": "2026-11-01",
+          "balance": "770.00"
+        },
+        "lowest_after": {
+          "date": "2026-11-01",
+          "balance": "620.00"
+        },
+        "outcome": "cushion",
+        "shortfall_dates_after": []
+      },
+      "paid_on_purchase_date": "150.00",
+      "last_payment_date": "2026-12-05",
+      "payments_after_scheduled_through": true,
+      "paid_from_checking_in_period": "300.00",
+      "paid_from_checking_in_window": "450.00",
+      "financing_cost_paid_in_window": "0.00",
+      "financing_cost_full_schedule": "0.00",
+      "total_paid_full_schedule": "600.00",
+      "full_schedule_complete": true,
+      "owed_at_window_end": "150.00",
+      "interest_or_fees_owed_at_window_end": "0.00",
+      "payoff_date": "2026-12-05",
+      "schedule": [
+        {
+          "number": 1,
+          "date": "2026-10-24",
+          "amount": "150.00",
+          "financing_part": "0.00",
+          "principal_part": "150.00",
+          "owed_after": "450.00",
+          "in_window": true
+        },
+        {
+          "number": 2,
+          "date": "2026-11-07",
+          "amount": "150.00",
+          "financing_part": "0.00",
+          "principal_part": "150.00",
+          "owed_after": "300.00",
+          "in_window": true
+        },
+        {
+          "number": 3,
+          "date": "2026-11-21",
+          "amount": "150.00",
+          "financing_part": "0.00",
+          "principal_part": "150.00",
+          "owed_after": "150.00",
+          "in_window": true
+        },
+        {
+          "number": 4,
+          "date": "2026-12-05",
+          "amount": "150.00",
+          "financing_part": "0.00",
+          "principal_part": "150.00",
+          "owed_after": "0.00",
+          "in_window": false
+        }
+      ],
+      "warnings": [
+        "$150.00 is still owed on Nov 30, 2026. Paying later is not the same as paying less."
+      ],
+      "assumptions": [
+        "This is a made-up fixed-payment offer to compare with. Real installment plans set their own number of payments, dates, fees, interest, late fees and approval rules.",
+        "Total = price + the fixed fee you entered, split into equal payments rounded down to the cent; the final payment includes any leftover cents.",
+        "The first payment is on the purchase date; later payments follow the chosen frequency."
+      ]
+    },
+    {
+      "method": "credit",
+      "title": "Credit card",
+      "terms": "24.99% APR, $100.00 a month from Nov 15, 2026 (illustration)",
+      "scenario": {
+        "start_date": "2026-11-01",
+        "end_date": "2026-11-30",
+        "currency": "USD",
+        "demo_reference_date": "2026-10-17",
+        "retrieval_date": "2026-10-18",
+        "scheduled_through": "2026-11-06",
+        "opening_balances": {
+          "checking": "1620.00",
+          "savings": "400.00"
+        },
+        "events": [
+          {
+            "id": "demo-estimate-2026-11-01-rent-utilities",
+            "date": "2026-11-01",
+            "label": "Rent/utilities",
+            "amount": "850.00",
+            "direction": "out",
+            "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+            "source": "demo_assumption",
+            "certainty": "estimated",
+            "period": "projected"
+          },
+          {
+            "id": "demo-estimate-2026-11-06-part-time-pay",
+            "date": "2026-11-06",
+            "label": "Part-time pay",
+            "amount": "650.00",
+            "direction": "in",
+            "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+            "source": "demo_assumption",
+            "certainty": "estimated",
+            "period": "projected"
+          },
+          {
+            "id": "experiment-credit-1",
+            "date": "2026-11-15",
+            "label": "Laptop \u00b7 card payment 1",
+            "amount": "100.00",
+            "direction": "out",
+            "account_id": "33b402ef-f6bc-4821-8974-611a646ebace",
+            "source": "experiment",
+            "certainty": "hypothetical",
+            "period": "projected"
+          }
+        ],
+        "daily_balances": [
+          {
+            "date": "2026-11-01",
+            "checking": "770.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-02",
+            "checking": "770.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-03",
+            "checking": "770.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-04",
+            "checking": "770.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-05",
+            "checking": "770.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-06",
+            "checking": "1420.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-07",
+            "checking": "1420.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-08",
+            "checking": "1420.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-09",
+            "checking": "1420.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-10",
+            "checking": "1420.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-11",
+            "checking": "1420.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-12",
+            "checking": "1420.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-13",
+            "checking": "1420.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-14",
+            "checking": "1420.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-15",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-16",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-17",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-18",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-19",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-20",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-21",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-22",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-23",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-24",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-25",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-26",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-27",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-28",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-29",
+            "checking": "1320.00",
+            "savings": "400.00"
+          },
+          {
+            "date": "2026-11-30",
+            "checking": "1320.00",
+            "savings": "400.00"
+          }
+        ],
+        "lowest_checking": {
+          "date": "2026-11-01",
+          "balance": "770.00"
+        },
+        "shortfall_dates": [],
+        "summary": {
+          "spent_so_far": "0.00",
+          "income_so_far": "0.00",
+          "projected_spending": "950.00",
+          "projected_income": "650.00"
+        },
+        "assumptions": [
+          "Account balances come from the Capital One Nessie sandbox; everything else here is fictional demo data.",
+          "Transactions dated 2026-10-01 to 2026-10-17 are app demo history (source 'demo_history'), not records fetched from Nessie. They were chosen to be consistent with the current checking balance.",
+          "The opening balance on 2026-10-01 is derived by undoing that history from the current balance; the current balance is not changed or counted twice.",
+          "Events after 2026-10-17 are estimates (source 'demo_assumption', certainty 'estimated').",
+          "The Nessie balances are treated as of the demo reference date 2026-10-17 so the demo stays stable; retrieval_date is the real date they were fetched.",
+          "Savings stays flat and is never used automatically to cover checking.",
+          "No payments, deposits or Nessie balance changes are made."
+        ]
+      },
+      "comparison": {
+        "period_start": "2026-11-01",
+        "period_end": "2026-11-30",
+        "ending_checking_before": "1420.00",
+        "ending_checking_after": "1320.00",
+        "difference": "-100.00",
+        "window_start": "2026-10-24",
+        "window_end": "2026-11-30",
+        "lowest_before": {
+          "date": "2026-11-01",
+          "balance": "770.00"
+        },
+        "lowest_after": {
+          "date": "2026-11-01",
+          "balance": "770.00"
+        },
+        "outcome": "cushion",
+        "shortfall_dates_after": []
+      },
+      "paid_on_purchase_date": "0.00",
+      "last_payment_date": "2027-05-15",
+      "payments_after_scheduled_through": true,
+      "paid_from_checking_in_period": "100.00",
+      "paid_from_checking_in_window": "100.00",
+      "financing_cost_paid_in_window": "9.04",
+      "financing_cost_full_schedule": "43.73",
+      "total_paid_full_schedule": "643.73",
+      "full_schedule_complete": true,
+      "owed_at_window_end": "514.27",
+      "interest_or_fees_owed_at_window_end": "5.23",
+      "payoff_date": "2027-05-15",
+      "schedule": [
+        {
+          "number": 1,
+          "date": "2026-11-15",
+          "amount": "100.00",
+          "financing_part": "9.04",
+          "principal_part": "90.96",
+          "owed_after": "509.04",
+          "in_window": true
+        },
+        {
+          "number": 2,
+          "date": "2026-12-15",
+          "amount": "100.00",
+          "financing_part": "10.46",
+          "principal_part": "89.54",
+          "owed_after": "419.50",
+          "in_window": false
+        },
+        {
+          "number": 3,
+          "date": "2027-01-15",
+          "amount": "100.00",
+          "financing_part": "8.90",
+          "principal_part": "91.10",
+          "owed_after": "328.40",
+          "in_window": false
+        },
+        {
+          "number": 4,
+          "date": "2027-02-15",
+          "amount": "100.00",
+          "financing_part": "6.97",
+          "principal_part": "93.03",
+          "owed_after": "235.37",
+          "in_window": false
+        },
+        {
+          "number": 5,
+          "date": "2027-03-15",
+          "amount": "100.00",
+          "financing_part": "4.51",
+          "principal_part": "95.49",
+          "owed_after": "139.88",
+          "in_window": false
+        },
+        {
+          "number": 6,
+          "date": "2027-04-15",
+          "amount": "100.00",
+          "financing_part": "2.97",
+          "principal_part": "97.03",
+          "owed_after": "42.85",
+          "in_window": false
+        },
+        {
+          "number": 7,
+          "date": "2027-05-15",
+          "amount": "43.73",
+          "financing_part": "0.88",
+          "principal_part": "42.85",
+          "owed_after": "0.00",
+          "in_window": false
+        }
+      ],
+      "warnings": [
+        "$514.27 is still owed on Nov 30, 2026. Paying later is not the same as paying less."
+      ],
+      "assumptions": [
+        "Educational illustration, not a card issuer's statement. Real cards differ (statement dates, minimum payments, grace periods, fees, penalty rates).",
+        "The purchase becomes card debt on the purchase date; checking only changes when a repayment is made.",
+        "Interest: APR / 365 per day on everything owed, starting the day after the purchase (no grace period is modeled). It is rounded to the cent and added on each payment date; payments cover interest first.",
+        "Payments are monthly on the same day as the first payment; the last one is only what is still owed.",
+        "The schedule stops after 120 payments (10 years).",
+        "Nothing here predicts approval or any effect on a credit score."
+      ]
+    }
+  ]
+}
