@@ -14,6 +14,7 @@ import { EMPTY_DRAFT, ExperimentPanel, type Draft, type Experiment, type SimStat
 import { ListView } from "./components/ListView";
 import { MonthGrid } from "./components/MonthGrid";
 import { MonthTotals } from "./components/MonthTotals";
+import GameLearningApp from "./learning/GameLearningApp";
 import { buildDays } from "./lib/calendarModel";
 import {
   addMonths,
@@ -39,7 +40,54 @@ function toApiError(err: unknown): ApiError {
   return err instanceof ApiError ? err : new ApiError("invalid", "Something unexpected went wrong.");
 }
 
+type MainView = "calendar" | "learn";
+
 export default function App() {
+  const [view, setView] = useState<MainView>("calendar");
+
+  if (view === "learn") {
+    return (
+      <div className="min-h-dvh bg-sky-page font-sans text-navy">
+        <header className="relative z-30 mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-2.5 sm:px-6">
+          <h1 className="font-display text-xl font-semibold tracking-tight">
+            Money <span className="text-accent">Calendar</span>
+          </h1>
+          <div className="ml-auto">
+            <ViewMenu view={view} onView={setView} />
+          </div>
+        </header>
+        <GameLearningApp />
+      </div>
+    );
+  }
+
+  return <CalendarApp onLearn={() => setView("learn")} />;
+}
+
+function ViewMenu({ view, onView }: { view: MainView; onView: (view: MainView) => void }) {
+  return (
+    <nav aria-label="Main sections" className="flex rounded-full bg-white p-1 shadow-soft">
+      {([
+        ["calendar", "Calendar"],
+        ["learn", "Learn"],
+      ] as const).map(([value, label]) => (
+        <button
+          key={value}
+          type="button"
+          aria-current={view === value ? "page" : undefined}
+          onClick={() => onView(value)}
+          className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+            view === value ? "bg-accent text-white" : "text-navy-soft hover:bg-accent-soft hover:text-navy"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function CalendarApp({ onLearn }: { onLearn: () => void }) {
   // ---- profile: name + fetched account balances (never changed by a preview) ----
   const [profile, setProfile] = useState<Load<Profile>>({ status: "loading" });
   const [profileAttempt, setProfileAttempt] = useState(0);
@@ -189,6 +237,7 @@ export default function App() {
         </h1>
         <AccountStrip profile={profile} onRetry={retryAll} />
         <div className="ml-auto flex items-center gap-2">
+          <ViewMenu view="calendar" onView={(view) => view === "learn" && onLearn()} />
           <button
             type="button"
             onClick={() => setFocusRequest((n) => n + 1)}
